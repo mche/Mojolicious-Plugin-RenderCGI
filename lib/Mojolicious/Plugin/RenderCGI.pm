@@ -69,12 +69,15 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs e
 
 =head1 Template
 
+  $c->layout('default', handler=>'ep',);
   my $foo = $c->stash('foo');
   $self->app->log->info("template rendering");
-  $c->include('far');
-  say h1({}, $foo);
+  $c->include('far');# handler cgi inherits
+  $c->include('bax', handler=>'ep');
+  say h1({}, "Welcome");
   say <<END_HTML;
-  <input name="bah" type="checkbox" />
+  <input id="bah" name="bah" type="checkbox" />
+  <label for="bah">$foo</label>
   END_HTML
   
 
