@@ -11,7 +11,7 @@ sub register
   $app->renderer->add_handler(
     cgi => sub {
       my ($r, $c, $output, $options) = @_;
-      $options->{'format'} = 'cgi';
+      #~ $options->{'format'} = 'cgi';
      
       # встроенный шаблон
       my $inline = $options->{inline};
