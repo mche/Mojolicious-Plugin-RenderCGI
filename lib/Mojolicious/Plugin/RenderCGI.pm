@@ -6,17 +6,20 @@ use Mojolicious::Plugin::RenderCGI::CGI;
 
 our $VERSION = '0.001';
 
+my %cache = ();
+
 sub register
 {
   my ($self, $app, $conf) = @_;
   
-  my $conf->{import} ||= [':html'];
-  $conf->{import} = [split(/\s+/, $conf->{import})]
+  $conf->{import} ||= [':html'];
+  $conf->{import} = [grep $_, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
   
   $app->renderer->add_handler(
     cgi => sub {
       my ($r, $c, $output, $options) = @_;
+      #~ $app->log->debug($app->dumper($options));
       # встроенный шаблон
       my $inline = $options->{inline};
       # относительный путь шаблона
@@ -30,16 +33,19 @@ sub register
       #~ my ($stdout, $stderr, @result) = capture {
         #~ # your code here
       #~ };
-     
-      # Передать rendered результат обратно в рендерер
-      $$output = join("\n", Mojolicious::Plugin::RenderCGI::CGI
+      
+      $content //=  Mojo::Asset::File->new(path => $path)->slurp;
+      
+      my $rend = $cache{$name} ||= Mojolicious::Plugin::RenderCGI::CGI
         ->new(import=>$conf->{import})
         ->renderer(
-          $inline // $content //  Mojo::Asset::File->new(path => $path)->slurp
-        )
-      ->($c, $options)
-      );
-      #~ $$output = 'The rendered result!';
+          $name,
+          $inline // $content,
+        );
+      
+      $app->log->debug(sprintf(qq{Rendering%s template "%s"}, $cache{$name} && ' cached', $name));
+      # Передать rendered результат обратно в рендерер
+      $$output = join("\n", $rend->($c,));
     }
   );
 }
