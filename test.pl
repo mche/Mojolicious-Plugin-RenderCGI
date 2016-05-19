@@ -1,4 +1,5 @@
 #!/usr/bin/env perl
+package TestApp;
 
 use Mojolicious::Lite;
 use FindBin;
@@ -26,5 +27,7 @@ __DATA__
 EP - Работает!
 
 @@ index.html.cgi
-'CGI - работает!',
+$c->layout('foo', handler=>'ep');
+h1({}, 'CGI - фарева!'),
+$c->include('index', handler=>'ep'),
 

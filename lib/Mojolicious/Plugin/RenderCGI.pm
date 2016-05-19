@@ -7,6 +7,7 @@ use Mojolicious::Plugin::RenderCGI::CGI;
 our $VERSION = '0.001';
 
 my %cache = ();
+my $last_template;
 
 sub register
 {
@@ -15,37 +16,59 @@ sub register
   $conf->{import} ||= [':html'];
   $conf->{import} = [grep $_, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
+    
+  my $renderer = Mojolicious::Plugin::RenderCGI::CGI->new(
+    import=>$conf->{import}
+  );
   
   $app->renderer->add_handler(
     cgi => sub {
       my ($r, $c, $output, $options) = @_;
       #~ $app->log->debug($app->dumper($options));
-      # встроенный шаблон
-      my $inline = $options->{inline};
+      
+      
       # относительный путь шаблона
       my $name = $r->template_name($options);
-      # подходящий шаблон в секции DATA
-      my $content = $r->get_data_template($options, $name);
-      #  абсолютный путь шаблона
-      my $path = $r->template_path($options);
-      #
-      # capture from arbitrary code (Perl or external)
-      #~ my ($stdout, $stderr, @result) = capture {
-        #~ # your code here
-      #~ };
       
-      $content //=  Mojo::Asset::File->new(path => $path)->slurp;
+      die "Loops template [$name]!"
+        if $name && $last_template && $last_template eq $name;
+      $last_template = $name;
       
-      my $rend = $cache{$name} ||= Mojolicious::Plugin::RenderCGI::CGI
-        ->new(import=>$conf->{import})
-        ->renderer(
-          $name,
-          $inline // $content,
-        );
+      # встроенный шаблон
+      my $content = $options->{inline};
       
-      $app->log->debug(sprintf(qq{Rendering%s template "%s"}, $cache{$name} && ' cached', $name));
+      my ($rend, $from) = (undef, 'inline');
+      
+      
+      unless (defined $content) {# не inline
+        # подходящий шаблон из кэша но не inline
+        ($rend, $from) = ($cache{$name}, 'cache');
+        
+        unless ($rend) {# не кэш
+          # подходящий шаблон в секции DATA
+          ($content, $from) = ($r->get_data_template($options), 'DATA section');#,, $name
+          unless (defined $content) {
+          #  абсолютный путь шаблона
+            my $path = $r->template_path($options);
+            ($content, $from) = (Mojo::Asset::File->new(path => $path)->slurp, 'file');
+          }
+        }
+      }
+        
+      $rend ||= $renderer->renderer($content)
+        if defined $content;
+        
+      $$output = sprintf(qq{Template "%s" not found}, $name // $from);
+      $app->log->debug($$output)
+        and return
+        unless $rend;
+
+      $app->log->debug(sprintf(qq{Rendering template "%s" from %s}, $name, $from,));
+    
       # Передать rendered результат обратно в рендерер
-      $$output = join("\n", $rend->($c,));
+      $$output = join("\n", $rend->($c,), '');
+      
+      $cache{$name} ||= $rend;
     }
   );
 }

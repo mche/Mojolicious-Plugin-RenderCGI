@@ -22,15 +22,13 @@ sub init {
 sub renderer {
   my $self = shift;
   my ($code) = @_;
-  my $t = <<CODE;
+  my $sub = eval <<CODE;
 sub {
 my (\$self, \$c);
 \$self = \$c = shift;
 $code
 }
 CODE
-  warn $t;
-    my $sub = eval $t;
   return sub {qq{Ошибка компиляции шаблона:\n$@}}
     if $@;
   return $sub;
