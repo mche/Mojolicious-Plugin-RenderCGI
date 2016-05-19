@@ -24,10 +24,20 @@ app->start;
 __DATA__
 
 @@ index.html.ep
+% layout 'foo';
+% title 'EP';
 EP - Работает!
 
 @@ index.html.cgi
 $c->layout('foo', handler=>'ep');
+$c->title('CGI');
 h1({}, 'CGI - фарева!'),
-$c->include('index', handler=>'ep'),
+# $c->include('index', handler=>'ep'),
+
+@@ layouts/foo.html.ep
+<html>
+<head><title><%= title %></title></head>
+<body><%= content %></body>
+</html>
+
 
