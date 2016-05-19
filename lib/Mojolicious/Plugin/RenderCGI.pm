@@ -50,7 +50,8 @@ sub register
           unless (defined $content) {
           #  абсолютный путь шаблона
             my $path = $r->template_path($options);
-            ($content, $from) = (Mojo::Asset::File->new(path => $path)->slurp, 'file');
+            my $file = Mojo::Asset::File->new(path => $path);
+            ($content, $from) = ($file->slurp, 'file');
           }
         }
       }
@@ -58,12 +59,12 @@ sub register
       $rend ||= $renderer->renderer($content)
         if defined $content;
         
-      $$output = sprintf(qq{Template "%s" not found}, $name // $from);
+      $$output = sprintf(qq{Template "%s" not found(}, $name // $from);
       $app->log->debug($$output)
         and return
         unless $rend;
 
-      $app->log->debug(sprintf(qq{Rendering template "%s" from %s}, $name, $from,));
+      $app->log->debug(sprintf(qq{Rendering template "%s" from %s )}, $name, $from,));
     
       # Передать rendered результат обратно в рендерер
       $$output = join("\n", $rend->($c,), '');

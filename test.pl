@@ -29,7 +29,8 @@ __DATA__
 EP - Работает!
 
 @@ index.html.cgi
-$c->layout('foo', handler=>'ep');
+# return 123;
+$c->layout('foo', handler=>'cgi');
 $c->title('CGI');
 h1({}, 'CGI - фарева!'),
 # $c->include('index', handler=>'ep'),

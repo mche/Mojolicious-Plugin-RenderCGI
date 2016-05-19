@@ -22,6 +22,7 @@ sub init {
 sub renderer {
   my $self = shift;
   my ($code) = @_;
+  $code ||= '"<!-- empty template! -->"';
   my $sub = eval <<CODE;
 sub {
 my (\$self, \$c);
