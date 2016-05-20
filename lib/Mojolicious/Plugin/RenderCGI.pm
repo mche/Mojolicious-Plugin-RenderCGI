@@ -60,7 +60,7 @@ sub register
               ($content, $from) = ($file->slurp, 'file');
               
             } else {
-              $error = sprintf(qq{Template "%s" file does not exists}, $name);
+              $error = sprintf(qq{Template "%s" does not exists}, $name);
               $$output = $conf->{skip_fatal} ? '' : $error;
               $app->log->error($error);
               return;
@@ -124,7 +124,7 @@ sub register
 
 =head1 NAME
 
-Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs exports.
+Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs imports.
 
 =head1 SYNOPSIS
 
@@ -132,7 +132,7 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs e
   
   # Set as default handler
   $app->renderer->default_handler('cgi');
-  # or
+  # or same
   $app->defaults(handler=>'cgi');
  
   # Render without setting as default handler
@@ -152,7 +152,7 @@ File name like "templates/foo/bar.html.cgi"
   #=======================================
   #======= content comma list! ===========
   #=======================================
-  $c->include('far', handler=>'cgi'),# change handler agains layout
+  $c->include('far', handler=>'cgi'),# change handler against layout
   $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changed it
   h1({}, "Welcome"),
   <<END_HTML,
@@ -162,26 +162,37 @@ File name like "templates/foo/bar.html.cgi"
   $self->app->log->info("Template has done")
     && undef,
 
-There are NO helpers without B<$c-\>> OR b<$self-\>> prefix.
+There are NO Mojolicious helpers without OO-style: B<$c-\>> OR b<$self-\>> prefix.
 
 =head1 Options
 
 =head2 import (string (space delims) | arrayref)
 
-What subs you want from CGI.pm
+What subs do you want from CGI.pm import
 
   $app->plugin('RenderCGI', import=>':html -any');
   # or 
   $app->plugin('RenderCGI', import=>[qw(:html -any)]);
 
-See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE". Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
+See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE".
+Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
 
   import=>[], # none import, CGI OO-style only
 
+=head2 skip_fatal (bool)
+
+Show fatal errors (not found, compile and runtime errors) as content of there template.
+By default on development mode set to 0 and 1 on production. Works on cgi handler only.
+
+  skip_fatal=>1, 
 
 =head1 SEE ALSO
 
+L<CGI>
+
 L<Mojolicious::Plugin::TagHelpers>
+
+L<HTML::Tiny>
 
 =head1 AUTHOR
 

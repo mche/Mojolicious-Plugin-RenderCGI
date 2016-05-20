@@ -14,6 +14,7 @@ $t->get_ok('/ep')->status_is(200)
 $t->get_ok('/cgi')->status_is(200)
   ->content_like(qr'CGI')
   ->content_like(qr'Transitional')
+  ->content_like(qr'not exists')
   ;
 
 $t->get_ok('/inline')->status_is(200)
@@ -65,6 +66,7 @@ h1({}, 'CGI - фарева!'),
 $c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
 
 @@ part.html.cgi
+$c->include('not exists',),
 hr,
 <<HTML,
 <!-- end part -->
