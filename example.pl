@@ -74,6 +74,7 @@ $self->app->log->info("The part has done")
 </html>
 
 @@ layouts/main.html.cgi
+charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,
 end_html,
