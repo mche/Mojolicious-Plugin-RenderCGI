@@ -17,7 +17,7 @@ $t->get_ok('/cgi')->status_is(200)
   ;
 
 $t->get_ok('/inline')->status_is(200)
-  ->content_like(qr'Inline')
+  ->content_like(qr'Online')
   ;
 
 
@@ -36,7 +36,7 @@ get '/cgi' => sub {
 get '/inline' => sub {
 	my $c = shift;
 	$c->render(inline=><<'EOT');
-h1 'Inline!'
+h1 'Online!'
 EOT
 };
 
@@ -56,7 +56,7 @@ __DATA__
 @@ index.html.ep
 % layout 'main';
 % title 'EP';
-EP - Работает!
+<h1>EP - OK!</h1>
 
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'

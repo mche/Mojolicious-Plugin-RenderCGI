@@ -5,7 +5,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 
 our $VERSION = '0.001';
-
+my $pkg = __PACKAGE__;
 my %cache = ();
 
 sub register
@@ -29,10 +29,13 @@ sub register
       # относительный путь шаблона
       my $name = $r->template_name($options);
       
+      my $stash = $c->stash($pkg);
+      $stash ||= {stack => []};
+      $last_template = $stash->{stack}[-1];
       die "Loops template [$name]!"
-        if $name && $last_template && $last_template eq $name;
-      $last_template = $name;
-      
+        if $last_template && $last_template eq $name;
+      push @{$stash->{stack}}, $name;
+
       # встроенный шаблон
       my $content = $options->{inline};
       
