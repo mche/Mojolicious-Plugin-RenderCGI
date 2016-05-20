@@ -1,16 +1,11 @@
-use strict;
-use warnings;
-use utf8;
+#!/usr/bin/env perl
+package TestApp;
 
-use Test::More;
 use Mojolicious::Lite;
+use FindBin;
+use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI';
-
-get '/ep' => sub {
-	my $c = shift;
-	$c->render(handler => 'ep');
-} => 'index';
+plugin 'RenderCGI'=> {skip_fatals=>0};
 
 get '/cgi' => sub {
 	my $c = shift;
@@ -19,7 +14,7 @@ get '/cgi' => sub {
 get '/inline' => sub {
 	my $c = shift;
 	$c->render(inline=><<'EOT');
-h1 'Ohline!'
+h1 'Inline!'
 EOT
 };
 
@@ -27,45 +22,16 @@ get '/empty' => sub {1};
 
 get '/will_not_found' => sub {1};
 
+get '/ep' => sub {
+	my $c = shift;
+	$c->render(handler => 'ep');
+} => 'index';
+
 #~ app->renderer->default_handler('cgi');
 app->defaults(handler=>'cgi');
+# app->log->level('error');
 
-#====== tests=============
-
-use_ok('Test::Mojo');
-
-my $t = Test::Mojo->new();# MyApp->new()
-
-$t->get_ok('/ep')->status_is(200)
-  ->content_like(qr'EP');
-  
-$t->get_ok('/cgi')->status_is(200)
-  ->content_like(qr'CGI')
-  ->content_like(qr'Transitional')
-  ->content_like(qr'not exists')
-  ;
-
-$t->get_ok('/inline')->status_is(200)
-  ->content_like(qr'Ohline')
-  ;
-
-$t->get_ok('/empty')->status_is(200)
-  ->content_is('')
-  ;
-
-$t->get_ok('/will_not_found')->status_is(200)
-  ->content_like(qr'does not found')
-  ;
-
-plugin 'RenderCGI' => {skip_fatals=>1,};
-
-$t = Test::Mojo->new;
-
-$t->get_ok('/will_not_found')->status_is(200)
-  ->content_is('')
-  ;
-
-done_testing();
+app->start;
 
 __DATA__
 
@@ -73,16 +39,24 @@ __DATA__
 % layout 'main';
 % title 'EP';
 <h1>EP - OK!</h1>
+% include 'loop1';
+
+@@ loop1.html.ep
+%# include 'loop2';
+
+@@ loop2.html.ep
+% include 'loop1';
 
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
 h1({}, 'CGI - фарева!'),
 $c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
+$c->include('файл',),
+$c->include('empty',),
 
 @@ part.html.cgi
 $c->include('not exists',),
-$c->include('empty',),
 hr,
 <<HTML,
 <!-- end part -->
@@ -90,9 +64,7 @@ HTML
 $self->app->log->info("The part has done")
   && undef,
 
-
 @@ empty.html.cgi
-
 
 
 @@ layouts/main.html.ep

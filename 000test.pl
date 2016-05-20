@@ -5,7 +5,7 @@ use Mojolicious::Lite;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI'=> {skip_fatal=>0};
+plugin 'RenderCGI'=> {skip_fatals=>0};
 
 get '/cgi' => sub {
 	my $c = shift;
@@ -17,6 +17,10 @@ get '/inline' => sub {
 h1 'Inline!'
 EOT
 };
+
+get '/empty' => sub {1};
+
+get '/will_not_found' => sub {1};
 
 get '/ep' => sub {
 	my $c = shift;
