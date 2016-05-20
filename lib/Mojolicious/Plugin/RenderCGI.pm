@@ -152,7 +152,7 @@ File name like "templates/foo/bar.html.cgi"
   #======= content comma list! ===========
   #=======================================
   $c->include('far', handler=>'cgi'),# change handler against layout
-  $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changed it
+  $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changes it
   h1({}, "Welcome"),
   <<END_HTML,
   <input id="bah" name="bah" type="checkbox" />
@@ -181,7 +181,7 @@ Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
 =head2 skip_fatals (bool)
 
 Show fatal errors (not found, compile and runtime errors) as content of there template.
-By default on development mode set to 0 and 1 on production. Works on cgi handler only.
+By default on B<development mode> set to 0 and 1 on B<production>. Works on cgi handler only.
 
   skip_fatals=>1, 
 
@@ -192,6 +192,8 @@ Implements register method only. Register new renderer handler 'cgi'. No new hel
 =head1 SEE ALSO
 
 L<CGI>
+
+L<CGI::HTML::Functions>
 
 L<Mojolicious::Plugin::TagHelpers>
 
