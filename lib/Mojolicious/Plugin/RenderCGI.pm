@@ -15,6 +15,7 @@ sub register
   $conf->{import} ||= [qw(:html :form)];
   $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
+  $conf->{skip_fatal} //= $app->mode ne 'development' ? 1 : 0;
     
   my $renderer = Mojolicious::Plugin::RenderCGI::CGI->new(
     import=>$conf->{import},
@@ -30,8 +31,10 @@ sub register
       my $name = $r->template_name($options);
       
       my $stash = $c->stash($pkg);
-      $stash ||= {stack => []};
-      $last_template = $stash->{stack}[-1];
+      $c->stash($pkg => {stack => []})
+        unless $stash;
+      $stash ||= $c->stash($pkg);
+      my $last_template = $stash->{stack}[-1];
       die "Loops template [$name]!"
         if $last_template && $last_template eq $name;
       push @{$stash->{stack}}, $name;
@@ -39,7 +42,7 @@ sub register
       # встроенный шаблон
       my $content = $options->{inline};
       
-      my ($rend, $from) = (undef, 'inline');
+      my ($error, $rend, $from) = (undef, undef, 'inline');
       
       #~ $$output = '';
       unless (defined $content) {# не inline
@@ -57,7 +60,9 @@ sub register
               ($content, $from) = ($file->slurp, 'file');
               
             } else {
-              $app->log->error(qq{Template "$name" file does not exists});
+              $error = sprintf(qq{Template "%s" file does not exists}, $name);
+              $$output = $conf->{skip_fatal} ? '' : $error;
+              $app->log->error($error);
               return;
             }
           }
@@ -70,20 +75,25 @@ sub register
         unless $rend || defined($content) && $content !~ /^\s*$/;
       
       $rend ||= $renderer->compile($content)
-        or $app->log->error(sprintf(qq{Template "%s" is not found}, $name // $from))
+        or ($error = sprintf(qq{Template "%s" is not found}, $name // $from))
+        and (($$output = $conf->{skip_fatal} ? '' : $error) || 1)
+        and $app->log->error($error)
         and return;
       
-      $$output = sprintf(qq{Compile error "%s": %s}, $name // $from, $rend)
-        and $app->log->error($$output)
+      $error = sprintf(qq{Compile error "%s": %s}, $name // $from, $rend)
+        and (($$output = $conf->{skip_fatal} ? '' : $error) || 1)
+        and $app->log->error($error)
         and return
         unless ref $rend eq 'CODE';
 
-      $app->log->debug(sprintf(qq{Rendering template "%s" from the %s [%s]}, $name, $from,$app->mode,));
+      $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
       $cache{$name} ||= $rend;
       # Передать rendered результат обратно в рендерер
       my @out = eval { $rend->($c, $renderer->{cgi},)};
-      $$output = sprintf(qq{Die on "%s":\n%s}, $name // $from, $@)
-        and $app->log->error($$output)
+      
+      $error = sprintf(qq{Die on "%s":\n%s}, $name // $from, $@)
+        and (($$output = $conf->{skip_fatal} ? '' : $error) || 1)
+        and $app->log->error($error)
         and return
         if $@;
       

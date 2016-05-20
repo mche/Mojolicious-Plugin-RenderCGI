@@ -52,6 +52,7 @@ $c->include('file',),
 $c->include('empty',),
 
 @@ part.html.cgi
+$c->include('part',),
 hr,
 <<HTML,
 <!-- end part -->
