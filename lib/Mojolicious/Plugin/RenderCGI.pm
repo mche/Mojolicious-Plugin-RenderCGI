@@ -155,13 +155,12 @@ File name like "templates/foo/bar.html.cgi"
   $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changes it
   h1({}, "Welcome"),
   <<END_HTML,
-  <input id="bah" name="bah" type="checkbox" />
-  <label for="bah">$foo</label>
+  <!-- comment -->
   END_HTML
   $self->app->log->info("Template has done")
     && undef,
 
-There are NO Mojolicious helpers without OO-style: B<$c-\>> OR b<$self-\>> prefix.
+There are NO Mojolicious helpers without OO-style: B<$c->> OR B<$self->> prefix.
 
 =head1 Options
 
