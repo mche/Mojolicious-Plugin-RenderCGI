@@ -1,9 +1,31 @@
-#!/usr/bin/env perl
-package TestApp;
+use strict;
+use warnings;
+use utf8;
+
+use Test::More;
+ 
+use_ok('Test::Mojo');
+
+my $t = Test::Mojo->new(MyApp->new());
+ 
+$t->get_ok('/ep')->status_is(200)
+  ->content_like(qr'EP');
+  
+$t->get_ok('/cgi')->status_is(200)
+  ->content_like(qr'CGI')
+  ->content_like(qr'Transitional')
+  ;
+
+$t->get_ok('/inline')->status_is(200)
+  ->content_like(qr'Inline')
+  ;
+
+
+done_testing();
+
+package MyApp;
 
 use Mojolicious::Lite;
-use FindBin;
-use lib "$FindBin::Bin/lib";
 
 plugin 'RenderCGI';
 
@@ -34,19 +56,13 @@ __DATA__
 @@ index.html.ep
 % layout 'main';
 % title 'EP';
-<h1>EP - Работает!</h1>
-% include 'loop';
-
-@@ loop.html.ep
-% include 'index';
+EP - Работает!
 
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
 h1({}, 'CGI - фарева!'),
 $c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
-$c->include('file',),
-$c->include('empty',),
 
 @@ part.html.cgi
 hr,
@@ -55,9 +71,6 @@ hr,
 HTML
 $self->app->log->info("The part has done")
   && undef,
-
-@@ empty.html.cgi
-
 
 @@ layouts/main.html.ep
 <html>

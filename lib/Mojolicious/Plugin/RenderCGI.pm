@@ -7,18 +7,17 @@ use Mojolicious::Plugin::RenderCGI::CGI;
 our $VERSION = '0.001';
 
 my %cache = ();
-my $last_template;
 
 sub register
 {
   my ($self, $app, $conf) = @_;
   
-  $conf->{import} ||= [':html'];
-  $conf->{import} = [grep $_, split(/\s+/, $conf->{import})]
+  $conf->{import} ||= [qw(:html :form)];
+  $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
     
   my $renderer = Mojolicious::Plugin::RenderCGI::CGI->new(
-    import=>$conf->{import}
+    import=>$conf->{import},
   );
   
   $app->renderer->add_handler(
@@ -39,7 +38,7 @@ sub register
       
       my ($rend, $from) = (undef, 'inline');
       
-      
+      #~ $$output = '';
       unless (defined $content) {# не inline
         # подходящий шаблон из кэша но не inline
         ($rend, $from) = ($cache{$name}, 'cache');
@@ -47,29 +46,46 @@ sub register
         unless ($rend) {# не кэш
           # подходящий шаблон в секции DATA
           ($content, $from) = ($r->get_data_template($options), 'DATA section');#,, $name
+          
           unless (defined $content) {
           #  абсолютный путь шаблона
-            my $path = $r->template_path($options);
-            my $file = Mojo::Asset::File->new(path => $path);
-            ($content, $from) = ($file->slurp, 'file');
+            if (my $path = $r->template_path($options)) {
+              my $file = Mojo::Asset::File->new(path => $path);
+              ($content, $from) = ($file->slurp, 'file');
+              
+            } else {
+              $app->log->error(qq{Template "$name" file does not exists});
+              return;
+            }
           }
         }
       }
-        
-      $rend ||= $renderer->renderer($content)
-        if defined $content;
-        
-      $$output = sprintf(qq{Template "%s" not found(}, $name // $from);
-      $app->log->debug($$output)
-        and return
-        unless $rend;
-
-      $app->log->debug(sprintf(qq{Rendering template "%s" from %s )}, $name, $from,));
-    
-      # Передать rendered результат обратно в рендерер
-      $$output = join("\n", $rend->($c,), '');
       
+      $$output = ''
+        or $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
+        and return
+        unless $rend || defined($content) && $content !~ /^\s*$/;
+      
+      $rend ||= $renderer->compile($content)
+        or $app->log->error(sprintf(qq{Template "%s" is not found}, $name // $from))
+        and return;
+      
+      $$output = sprintf(qq{Compile error "%s": %s}, $name // $from, $rend)
+        and $app->log->error($$output)
+        and return
+        unless ref $rend eq 'CODE';
+
+      $app->log->debug(sprintf(qq{Rendering template "%s" from the %s [%s]}, $name, $from,$app->mode,));
       $cache{$name} ||= $rend;
+      # Передать rendered результат обратно в рендерер
+      my @out = eval { $rend->($c, $renderer->{cgi},)};
+      $$output = sprintf(qq{Die on "%s":\n%s}, $name // $from, $@)
+        and $app->log->error($$output)
+        and return
+        if $@;
+      
+      $$output = join"\n", grep defined, @out;
+      
     }
   );
 }
@@ -103,6 +119,8 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs e
   
   # Set as default handler
   $app->renderer->default_handler('cgi');
+  # or
+  $app->defaults(handler=>'cgi');
  
   # Render without setting as default handler
   $c->render(handler => 'cgi');
@@ -110,33 +128,42 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs e
 
 =head1 Template
 
+File name like "templates/foo/bar.html.cgi"
+
   # $c and $self already are controller
-  $c->layout('default', handler=>'ep',);
-  my $foo = $c->stash('foo');
-  $self->app->log->info("template rendering");
+  # $cgi is a CGI object (OO-style)
+  
+  $c->layout('default', handler=>'ep',);# set handler 'ep' for all includes !!!
+  my $foo = $c->stash('foo')
+    or die "Where is your FOO?";
   #=======================================
   #======= content comma list! ===========
   #=======================================
-  $c->include('far'),
-  $c->include('bax', handler=>'ep');
+  $c->include('far', handler=>'cgi'),# change handler agains layout
+  $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changed it
   h1({}, "Welcome"),
   <<END_HTML,
   <input id="bah" name="bah" type="checkbox" />
   <label for="bah">$foo</label>
   END_HTML
-  ...
+  $self->app->log->info("Template has done")
+    && undef,
 
 There are NO helpers without B<$c-\>> OR b<$self-\>> prefix.
 
 =head1 Options
 
-=head2 import
+=head2 import (string (space delims) | arrayref)
+
+What subs you want from CGI.pm
 
   $app->plugin('RenderCGI', import=>':html -any');
   # or 
   $app->plugin('RenderCGI', import=>[qw(:html -any)]);
 
-See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE". Default is ':html' (string) or [qw(:html)] (arrayref).
+See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE". Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
+
+  import=>[], # none import, CGI OO-style only
 
 
 =head1 SEE ALSO

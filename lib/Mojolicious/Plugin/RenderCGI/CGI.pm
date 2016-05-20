@@ -14,23 +14,26 @@ sub init {
   my $self = shift;
   my %arg = @_;
   require CGI;
-  CGI->import(@{$arg{import}});
+  CGI->import(@{$arg{import}})
+    if @{$arg{import}};
+  $self->{cgi} = CGI->new();
   return $self;
 }
 
 
-sub renderer {
+sub compile {
   my $self = shift;
   my ($code) = @_;
-  $code ||= '"<!-- empty template! -->"';
+
   my $sub = eval <<CODE;
 sub {
-my (\$self, \$c);
+my (\$self, \$c,);
 \$self = \$c = shift;
+my \$cgi = shift;
 $code
 }
 CODE
-  return sub {qq{Ошибка компиляции шаблона:\n$@}}
+  return qq{Ошибка компиляции шаблона:\n$@}
     if $@;
   return $sub;
 }
