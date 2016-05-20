@@ -124,7 +124,7 @@ sub register
 
 =head1 NAME
 
-Mojolicious::Plugin::RenderCGI - Rendering template with Perl code CGI.pm subs imports.
+Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm subs imports.
 
 =head1 SYNOPSIS
 

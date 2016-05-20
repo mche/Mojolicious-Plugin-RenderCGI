@@ -18,7 +18,7 @@ $t->get_ok('/cgi')->status_is(200)
   ;
 
 $t->get_ok('/inline')->status_is(200)
-  ->content_like(qr'Online')
+  ->content_like(qr'Ohline')
   ;
 
 
@@ -37,7 +37,7 @@ get '/cgi' => sub {
 get '/inline' => sub {
 	my $c = shift;
 	$c->render(inline=><<'EOT');
-h1 'Online!'
+h1 'Ohline!'
 EOT
 };
 
@@ -48,7 +48,6 @@ get '/ep' => sub {
 
 #~ app->renderer->default_handler('cgi');
 app->defaults(handler=>'cgi');
-# app->log->level('error');
 
 app->start;
 
