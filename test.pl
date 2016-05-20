@@ -35,10 +35,13 @@ __DATA__
 % layout 'main';
 % title 'EP';
 <h1>EP - Работает!</h1>
-% include 'loop';
+% include 'loop1';
 
-@@ loop.html.ep
-% include 'index';
+@@ loop1.html.ep
+% include 'loop2';
+
+@@ loop2.html.ep
+% include 'loop1';
 
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'
