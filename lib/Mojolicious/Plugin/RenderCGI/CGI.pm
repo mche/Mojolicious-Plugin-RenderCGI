@@ -17,6 +17,7 @@ sub init {
   CGI->import(@{$arg{import}})
     if @{$arg{import}};
   $self->{cgi} = CGI->new();
+  $self->{cgi}->charset('utf-8');
   return $self;
 }
 
