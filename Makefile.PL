@@ -8,7 +8,7 @@ WriteMakefile(
     AUTHOR           => q{Михаил Че <mche@cpan.org>},
     VERSION_FROM     => 'lib/Mojolicious/Plugin/RenderCGI.pm',
     ABSTRACT_FROM    => 'lib/Mojolicious/Plugin/RenderCGI.pm',
-    LICENSE          => 'artistic_2',
+    LICENSE          => 'perl',
     PL_FILES         => {},
     MIN_PERL_VERSION => 5.006,
     CONFIGURE_REQUIRES => {
