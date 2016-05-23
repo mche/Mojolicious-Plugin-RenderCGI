@@ -29,8 +29,8 @@ get '/empty' => sub {1};
 
 get '/will_not_found' => sub {1};
 
-#~ app->renderer->default_handler('cgi');
-app->defaults(handler=>'cgi');
+#~ app->renderer->default_handler('cgi.pl');
+app->defaults(handler=>'cgi.pl');
 
 #====== tests=============
 
@@ -55,7 +55,7 @@ $t->get_ok('/empty')->status_is(200)
   ;
 
 $t->get_ok('/will_not_found')->status_is(200)
-  ->content_is('Template "will_not_found.html.cgi" does not found')
+  ->content_is('Template "will_not_found.html.cgi.pl" does not found')
   ;
 
 plugin 'RenderCGI' => {exception =>'skip',};
@@ -86,13 +86,13 @@ __DATA__
 % title 'EP';
 <h1>EP - OK!</h1>
 
-@@ index.html.cgi
+@@ index.html.cgi.pl
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
 h1({}, esc '<CGI - фарева!>'),
-$c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
+$c->include('part', handler=>'cgi.pl',),# handler still cgi? NO: Template "part.html.ep" not found!
 
-@@ part.html.cgi
+@@ part.html.cgi.pl
 $c->include('not exists',),
 $c->include('empty',),
 hr,
@@ -102,9 +102,7 @@ HTML
 $self->app->log->info("The part has done")
   && undef,
 
-
-@@ empty.html.cgi
-
+@@ empty.html.cgi.pl
 
 
 @@ layouts/main.html.ep
@@ -113,7 +111,7 @@ $self->app->log->info("The part has done")
 <body><%= content %></body>
 </html>
 
-@@ layouts/main.html.cgi
+@@ layouts/main.html.cgi.pl
 charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,

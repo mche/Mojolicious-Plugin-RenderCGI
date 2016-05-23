@@ -4,13 +4,14 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(encode md5_sum);
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 my $pkg = __PACKAGE__;
 my %cache = ();
 
 sub register {
   my ($self, $app, $conf) = @_;
   
+  $conf->{name} ||= 'cgi.pl';
   $conf->{import} ||= [qw(:html :form)];
   $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
@@ -33,7 +34,7 @@ sub register {
   };
   
   $app->renderer->add_handler(
-    cgi => sub {
+    $conf->{name} => sub {
       my ($r, $c, $output, $options) = @_;
       #~ $app->log->debug($app->dumper($options));
       
@@ -120,7 +121,7 @@ sub register {
 
 =head1 VERSION
 
-0.01
+0.02
 
 =head1 NAME
 
@@ -131,17 +132,17 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
   $app->plugin('RenderCGI');
   
   # Set as default handler
-  $app->renderer->default_handler('cgi');
+  $app->renderer->default_handler('cgi.pl');
   # or same
-  $app->defaults(handler=>'cgi');
+  $app->defaults(handler=>'cgi.pl');
  
   # Render without setting as default handler
-  $c->render(handler => 'cgi');
+  $c->render(handler => 'cgi.pl');
   
 
 =head1 Template
 
-Template is a Perl code that generate content as list of statements. Similar to C<do> BLOCK. Template file name like "templates/foo/bar.html.cgi"
+Template is a Perl code that generate content as list of statements. Similar to C<do> BLOCK. Template file name like "templates/foo/bar.html.cgi.pl"
 
   # $c and $self already are controller
   # $cgi is a CGI object (OO-style)
@@ -156,8 +157,8 @@ Template is a Perl code that generate content as list of statements. Similar to 
   
   h1({}, "Welcome"),
   
-  $c->include('foo', handler=>'cgi'),# change handler against layout
-  $c->include('bar'); # handler still "cgi" unless template "foo" (and its includes) didn`t changes it
+  $c->include('foo', handler=>'cgi.pl'),# change handler against layout
+  $c->include('bar'); # handler still "cgi.pl" unless template "foo" (and its includes) didn`t changes it
   
   <<END_HTML,
   <!-- comment -->
@@ -174,9 +175,16 @@ B<REMEMBER!> Escapes untrusted data. No auto escapes!
 
 C<esc> is a shortcut for &CGI::escapeHTML.
 
-=head1 Options
+=head1 OPTIONS
 
-=head2 import (string (space delims) | arrayref)
+=head2 name ( string )
+
+  # Mojolicious::Lite
+  plugin RenderCGI => {name => 'pl'};
+
+Handler name, defaults to 'cgi.pl'.
+
+=head2 import ( string (space delims) | arrayref )
 
 What subs do you want from CGI.pm import
 
@@ -189,7 +197,7 @@ Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
 
   import=>[], # none import, CGI OO-style only
 
-=head2 exception (string|hashref)
+=head2 exception ( string | hashref )
 
 To show fatal errors (not found, compile and runtime errors) as content of there template you must set string B<template>.
 

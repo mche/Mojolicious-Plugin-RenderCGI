@@ -5,7 +5,7 @@ use Mojolicious::Lite;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI'=> {exception=> 'template0'};
+plugin 'RenderCGI'=> {exception=> 'template', 'name'=>'cgi.pl'};
 
 get '/cgi' => sub {
 	my $c = shift;
@@ -33,7 +33,7 @@ get '/ep404' => sub {
 };
 
 #~ app->renderer->default_handler('cgi');
-app->defaults(handler=>'cgi');
+app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
 
 app->start;
@@ -52,15 +52,15 @@ __DATA__
 @@ loop2.html.ep
 % include 'loop1';
 
-@@ index.html.cgi
+@@ index.html.cgi.pl
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
 h1({}, esc '<CGI - фарева!'),
-$c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
+$c->include('part', handler=>'cgi.pl',),# handler still cgi? NO
 $c->include('файл',),
 $c->include('empty',),
 
-@@ part.html.cgi
+@@ part.html.cgi.pl
 $c->include('not exists',),
 hr,
 <<HTML,
@@ -69,7 +69,7 @@ HTML
 $self->app->log->info("The part has done")
   && undef,
 
-@@ empty.html.cgi
+@@ empty.html.cgi.pl
 
 
 @@ layouts/main.html.ep
@@ -78,7 +78,7 @@ $self->app->log->info("The part has done")
 <body><%= content %></body>
 </html>
 
-@@ layouts/main.html.cgi
+@@ layouts/main.html.cgi.pl
 charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,
