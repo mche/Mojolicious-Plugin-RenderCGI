@@ -5,7 +5,7 @@ use utf8;
 use Test::More;
 use Mojolicious::Lite;
 
-plugin 'RenderCGI';
+plugin 'RenderCGI' => {exception => 'template',};
 
 get '/ep' => sub {
 	my $c = shift;
@@ -19,6 +19,8 @@ get '/cgi' => sub {
 get '/inline' => sub {
 	my $c = shift;
 	$c->render(inline=><<'EOT');
+$c->layout('main',);
+$c->title('INLINE');
 h1 'Ohline!'
 EOT
 };
@@ -42,7 +44,6 @@ $t->get_ok('/ep')->status_is(200)
 $t->get_ok('/cgi')->status_is(200)
   ->content_like(qr'CGI')
   ->content_like(qr'Transitional')
-  ->content_like(qr'not exists')
   ;
 
 $t->get_ok('/inline')->status_is(200)
@@ -54,15 +55,26 @@ $t->get_ok('/empty')->status_is(200)
   ;
 
 $t->get_ok('/will_not_found')->status_is(200)
-  ->content_like(qr'does not found')
+  ->content_is('Template "will_not_found.html.cgi" does not found')
   ;
 
-plugin 'RenderCGI' => {skip_fatals=>1,};
+plugin 'RenderCGI' => {exception =>'skip',};
 
 $t = Test::Mojo->new;
 
 $t->get_ok('/will_not_found')->status_is(200)
   ->content_is('')
+  ;
+
+plugin 'RenderCGI';
+
+$t->get_ok('/cgi')->status_is(500)
+  ->content_like(qr'Die')
+  ->content_like(qr'not found')
+  ;
+
+$t->get_ok('/inline')->status_is(200)
+  ->content_like(qr'Ohline')
   ;
 
 done_testing();
@@ -77,7 +89,7 @@ __DATA__
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
-h1({}, 'CGI - фарева!'),
+h1({}, esc '<CGI - фарева!>'),
 $c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
 
 @@ part.html.cgi
