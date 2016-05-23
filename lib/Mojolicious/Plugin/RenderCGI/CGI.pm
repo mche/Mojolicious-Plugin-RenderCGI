@@ -1,6 +1,8 @@
 package Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Base -strict;
 
+my $cgi;
+
 sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
@@ -13,11 +15,10 @@ sub new {
 sub init {
   my $self = shift;
   my %arg = @_;
+  push @{$arg{import}}, 'escapeHTML';
   require CGI;
-  CGI->import(@{$arg{import}})
-    if @{$arg{import}};
-  $self->{cgi} = CGI->new();
-  #~ $self->{cgi}->charset('utf-8');
+  CGI->import(@{$arg{import}});
+  $cgi = CGI->new();
   return $self;
 }
 
@@ -30,13 +31,14 @@ sub compile {
 sub {
 my (\$self, \$c,);
 \$self = \$c = shift;
-my \$cgi = shift;
 $code
 }
 CODE
-  return qq{Ошибка компиляции шаблона:\n$@}
+  return $@
     if $@;
   return $sub;
 }
+
+sub esc { escapeHTML(@_) }
 
 1;

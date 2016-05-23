@@ -5,7 +5,7 @@ use Mojolicious::Lite;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI'=> {skip_fatals=>0};
+plugin 'RenderCGI'=> {not_found => 'reply'};
 
 get '/cgi' => sub {
 	my $c = shift;
@@ -26,6 +26,11 @@ get '/ep' => sub {
 	my $c = shift;
 	$c->render(handler => 'ep');
 } => 'index';
+
+get '/ep404' => sub {
+	my $c = shift;
+	$c->render(handler => 'ep');
+};
 
 #~ app->renderer->default_handler('cgi');
 app->defaults(handler=>'cgi');
@@ -50,7 +55,7 @@ __DATA__
 @@ index.html.cgi
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
-h1({}, 'CGI - фарева!'),
+h1({}, esc '<CGI - фарева!'),
 $c->include('part', handler=>'cgi',),# handler still cgi? NO: Template "part.html.ep" not found!
 $c->include('файл',),
 $c->include('empty',),
@@ -78,3 +83,4 @@ charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,
 end_html,
+
