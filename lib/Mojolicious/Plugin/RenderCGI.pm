@@ -3,8 +3,9 @@ package Mojolicious::Plugin::RenderCGI;
 use Mojo::Base 'Mojolicious::Plugin';
 #~ use Capture::Tiny qw(capture);
 use Mojolicious::Plugin::RenderCGI::CGI;
+use Mojo::Util qw(encode md5_sum);
 
-our $VERSION = '0.001';
+our $VERSION = '0.01';
 my $pkg = __PACKAGE__;
 my %cache = ();
 
@@ -14,7 +15,8 @@ sub register {
   $conf->{import} ||= [qw(:html :form)];
   $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
-  $conf->{skip_fatals} //= $app->mode ne 'development' ? 1 : 0;
+  $conf->{fatals} //= $app->mode eq 'development' ? 'exception' : 'template';
+  $conf->{not_found} //= $app->mode eq 'development' ? 'template' : 'reply->not_found';
     
   my $renderer = Mojolicious::Plugin::RenderCGI::CGI->new(
     import=>$conf->{import},
@@ -27,7 +29,13 @@ sub register {
       
       
       # относительный путь шаблона
-      my $name = $r->template_name($options);
+      #~ my $name = $r->template_name($options);
+      my $content = $options->{inline};# встроенный шаблон
+      my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
+      return unless defined($name //= $r->template_name($options));
+      
+      my ($error, $rend, $from) = (undef, undef, 'inline')
+        if defined $content;
       
       my $stash = $c->stash($pkg);
       $c->stash($pkg => {stack => []})
@@ -37,22 +45,15 @@ sub register {
       die "Loops template [$name]!"
         if $last_template && $last_template eq $name;
       push @{$stash->{stack}}, $name;
-
-      # встроенный шаблон
-      my $content = $options->{inline};
       
-      my ($error, $rend, $from) = (undef, undef, 'inline');
-      
-      #~ $$output = '';
-      unless (defined $content) {# не inline
-        # подходящий шаблон из кэша но не inline
+      unless (defined $content) {#не инлайн
+        # подходящий шаблон из кэша 
         ($rend, $from) = ($cache{$name}, 'cache');
-        
         unless ($rend) {# не кэш
           # подходящий шаблон в секции DATA
           ($content, $from) = ($r->get_data_template($options), 'DATA section');#,, $name
           
-          unless (defined $content) {
+          unless (defined $content) {# file
           #  абсолютный путь шаблона
             if (my $path = $r->template_path($options)) {
               my $file = Mojo::Asset::File->new(path => $path);
@@ -68,13 +69,13 @@ sub register {
         }
       }
       
-      ($$output = '')
-        or $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
+      $$output = '';
+      $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
         and return
         unless $rend || defined($content) && $content !~ /^\s*$/;
       
       $rend ||= $renderer->compile($content)
-        or ($error = sprintf(qq{Template "%s" does not exists}, $name // $from))
+        or ($error = sprintf(qq{Template "%s" does not exists?}, $name // $from))
         and (($$output = $conf->{skip_fatals} ? '' : $error) || 1)
         and $app->log->error($error)
         and return;
@@ -119,11 +120,11 @@ sub register {
 
 =head1 VERSION
 
-0.001
+0.01
 
 =head1 NAME
 
-Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm subs imports.
+Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm subs.
 
 =head1 SYNOPSIS
 

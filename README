@@ -1,6 +1,6 @@
 Mojolicious-Plugin-RenderCGI
 
-Rendering template with Perl code and CGI.pm subs imports.
+Rendering template with Perl code and CGI.pm subs.
 
 See pod https://metacpan.org/pod/Mojolicious::Plugin::RenderCGI
 
