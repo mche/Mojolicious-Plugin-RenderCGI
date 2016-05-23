@@ -5,8 +5,6 @@ use Mojolicious::Lite;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI'=> {exception=> 'template', 'name'=>'cgi.pl'};
-
 get '/cgi' => sub {
 	my $c = shift;
 } => 'index';
@@ -35,6 +33,8 @@ get '/ep404' => sub {
 #~ app->renderer->default_handler('cgi');
 app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
+
+plugin 'RenderCGI'=> {exception=> 'template',};#'name'=>'cgi.pl'
 
 app->start;
 

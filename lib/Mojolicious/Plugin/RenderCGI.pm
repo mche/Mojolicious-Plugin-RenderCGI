@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(encode md5_sum);
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 my $pkg = __PACKAGE__;
 my %cache = ();
 
@@ -12,6 +12,8 @@ sub register {
   my ($self, $app, $conf) = @_;
   
   $conf->{name} ||= 'cgi.pl';
+  #~ $app->renderer->default_handler($conf->{name})
+    #~ if $conf->{default};
   $conf->{import} ||= [qw(:html :form)];
   $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
@@ -121,7 +123,7 @@ sub register {
 
 =head1 VERSION
 
-0.02
+0.03
 
 =head1 NAME
 
@@ -183,6 +185,10 @@ C<esc> is a shortcut for &CGI::escapeHTML.
   plugin RenderCGI => {name => 'pl'};
 
 Handler name, defaults to 'cgi.pl'.
+
+=head2 default (bool) NOT WORKS!
+
+When C<true> then c<$app->renderer->default_handler(<name above>);>. Defaults - undef (non default handler for app).
 
 =head2 import ( string (space delims) | arrayref )
 
