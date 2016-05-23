@@ -117,4 +117,4 @@ $self->app->log->info("The part has done")
 charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,
-end_html,
+$cgi->end_html,

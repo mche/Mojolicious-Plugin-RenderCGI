@@ -199,7 +199,7 @@ Overwise fatals are skips (empty string whole template).
 
 By default set to hashref {'handler'=>'ep', 'layout' => undef,}.
 
-  fatals=>'template', 
+  exception => 'template', 
 
 =head1 Methods, subs, helpers...
 
