@@ -15,9 +15,9 @@ sub register {
   $conf->{import} ||= [qw(:html :form)];
   $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
     unless ref $conf->{import};
-  #~ $conf->{fatals} //= $app->mode eq 'development' ? 'exception' : 'template';
-  $conf->{fatals} = 'exception';
-  $conf->{not_found} //= $app->mode eq 'development' ? 'template' : 'reply';
+  #~ $conf->{skip_fatals} //= $app->mode eq 'development' ? 0 : 1;
+  $conf->{fatals} //= 'exception';
+  #~ $conf->{not_found} //= $app->mode eq 'development' ? 'template' : 'exception';
     
   my $renderer = Mojolicious::Plugin::RenderCGI::CGI->new(
     import=>$conf->{import},
@@ -27,7 +27,6 @@ sub register {
     cgi => sub {
       my ($r, $c, $output, $options) = @_;
       #~ $app->log->debug($app->dumper($options));
-      
       
       # относительный путь шаблона
       #~ my $name = $r->template_name($options);
@@ -65,10 +64,9 @@ sub register {
               $error = sprintf(qq{Template "%s" does not found}, $name);
               $app->log->error($error);
               $c->stash('handler'=>'ep')
-                and $c->reply->not_found
-                and return
-                if $conf->{not_found} eq 'reply';
-              $$output = $error;
+                and die $error
+                if $conf->{fatals} eq 'exception';
+              $$output = $conf->{fatals} eq 'template' ? $error : '';
               return;
             }
           }
@@ -81,38 +79,29 @@ sub register {
         unless $rend || defined($content) && $content !~ /^\s*$/;
       
       $rend ||= $renderer->compile($content);
-      #~ unless 
-        #~ or ($error = sprintf(qq{Template "%s" does not exists?}, $name // $from))
-        #~ and $app->log->error($error)
-        #~ and $c->stash('handler'=>'ep')
-        #~ and ($$output = )
-        #~ and (($$output = $conf->{skip_fatals} ? '' : $error) || 1)
-        
-        #~ and return;
-      
+
       unless (ref $rend eq 'CODE') {
         $error = sprintf(qq{Compile error template "%s": %s}, $name // $from, $rend);
         $app->log->error($error);
         $c->stash('handler'=>'ep')
-          and $c->reply->exception($error)
-          and return
+          and die $error
           if $conf->{fatals} eq 'exception';
-        $$output = $error;
+        $$output = $conf->{fatals} eq 'template' ? $error : '';
         return;
       }
 
       $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
       $cache{$name} ||= $rend;
+      
       # Передать rendered результат обратно в рендерер
       my @out = eval { $rend->($c,)};
       if ($@) {
-        $error = sprintf(qq{Die on "%s":\n%s}, $name // $from, $@);
+        $error = sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@);
         $app->log->error($error);
         $c->stash('handler'=>'ep')
-          and $c->reply->exception($error)
-          and return
+          and die $error
           if $conf->{fatals} eq 'exception';
-        $$output = $error;
+        $$output =  $conf->{fatals} eq 'template' ? $error : '';
         return;
       }
       
@@ -168,19 +157,30 @@ File name like "templates/foo/bar.html.cgi"
   $c->layout('default', handler=>'ep',);# set handler 'ep' for all includes !!!
   my $foo = $c->stash('foo')
     or die "Where is your FOO?";
+  
   #=======================================
   #======= content comma list! ===========
   #=======================================
-  $c->include('far', handler=>'cgi'),# change handler against layout
-  $c->include('bax'); # handler still "cgi" unless template "bax" (and its includes) didn`t changes it
+  
   h1({}, "Welcome"),
+  
+  $c->include('foo', handler=>'cgi'),# change handler against layout
+  $c->include('bar'); # handler still "cgi" unless template "foo" (and its includes) didn`t changes it
+  
   <<END_HTML,
   <!-- comment -->
   END_HTML
+  
   $self->app->log->info("Template has done")
     && undef,
 
 There are NO Mojolicious helpers without OO-style: B<$c->> OR B<$self->> prefix.
+
+B<REMEMBER!> Escapes untrusted data. No auto escapes!
+
+  div({}, esc(...UNTRUSTED DATA...)),
+
+C<esc> is a shortcut for &CGI::escapeHTML.
 
 =head1 Options
 
@@ -197,12 +197,17 @@ Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
 
   import=>[], # none import, CGI OO-style only
 
-=head2 skip_fatals (bool)
+=head2 fatals (string)
 
-Show fatal errors (not found, compile and runtime errors) as content of there template.
-By default on B<development mode> set to 0 and 1 on B<production>. Works on cgi handler only.
+To show fatal errors (not found, compile and runtime errors) as content of there template you must set string B<template>.
 
-  skip_fatals=>1, 
+To show fatals as standard Mojolicious 'exception.<mode>.html.ep' page (handler=>'ep' auto sets) - set B<exception>.
+
+Overwise fatals are skips (empty string whole template).
+
+By default set to B<exception>.
+
+  fatals=>'template', 
 
 =head1 Methods, subs, helpers...
 

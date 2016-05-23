@@ -5,7 +5,7 @@ use Mojolicious::Lite;
 use FindBin;
 use lib "$FindBin::Bin/lib";
 
-plugin 'RenderCGI'=> {not_found => 'reply'};
+plugin 'RenderCGI'=> {fatals => 'template'};
 
 get '/cgi' => sub {
 	my $c = shift;
