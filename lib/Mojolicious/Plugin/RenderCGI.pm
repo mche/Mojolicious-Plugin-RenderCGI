@@ -214,7 +214,7 @@ To show fatals as standard Mojolicious 'exception.<mode>.html.ep' page  - set ha
 
 Overwise fatals are skips (empty string whole template).
 
-By default set to hashref C<{'handler'=>'ep', 'layout' => undef,}>.
+By default set to hashref C<< {'handler'=>'ep', 'layout' => undef,} >>.
 
   exception => 'template', 
 
