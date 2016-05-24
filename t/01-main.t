@@ -5,7 +5,7 @@ use utf8;
 use Test::More;
 use Mojolicious::Lite;
 
-plugin 'RenderCGI' => {exception => 'template',};
+plugin 'RenderCGI' => {default => 1, exception => 'template',};
 
 get '/ep' => sub {
 	my $c = shift;
@@ -30,7 +30,7 @@ get '/empty' => sub {1};
 get '/will_not_found' => sub {1};
 
 #~ app->renderer->default_handler('cgi.pl');
-app->defaults(handler=>'cgi.pl');
+#~ app->defaults(handler=>'cgi.pl');
 
 #====== tests=============
 
@@ -58,7 +58,7 @@ $t->get_ok('/will_not_found')->status_is(200)
   ->content_is('Template "will_not_found.html.cgi.pl" does not found')
   ;
 
-plugin 'RenderCGI' => {exception =>'skip',};
+plugin 'RenderCGI' , exception =>'skip',};
 
 $t = Test::Mojo->new;
 
@@ -66,7 +66,7 @@ $t->get_ok('/will_not_found')->status_is(200)
   ->content_is('')
   ;
 
-plugin 'RenderCGI';
+plugin 'RenderCGI' => {default => 1};
 
 $t->get_ok('/cgi')->status_is(500)
   ->content_like(qr'Die')

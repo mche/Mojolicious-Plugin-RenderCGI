@@ -2,7 +2,7 @@ package Mojolicious::Plugin::RenderCGI;
 
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
-use Mojo::Util qw(encode md5_sum);
+use Mojo::Util qw(decode encode md5_sum);
 
 our $VERSION = '0.03';
 my $pkg = __PACKAGE__;
@@ -22,7 +22,7 @@ sub register {
     and $app->defaults('handler'=>$plugin->name)
     if $plugin->default;
     
-  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(@{$plugin->import},);
+  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(ref($plugin->import) eq 'ARRAY' ? @{$plugin->import} : (grep /\w/, split(/\s+/, $plugin->import)),);
   
   $app->renderer->add_handler(
     $plugin->name => sub {
@@ -34,7 +34,7 @@ sub register {
       my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
       return unless defined($name //= $r->template_name($options));
       
-      my ($rend, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
+      my ($template, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
       
       my $stash = $c->stash($pkg);
       $c->stash($pkg => {stack => []})
@@ -47,7 +47,7 @@ sub register {
       }
       push @{$stash->{stack}}, $name;
       
-      unless ($rend) {#не кэш
+      unless ($template) {#не кэш
         if (defined $content) {# инлайн
           $from = 'inline';
         } else {
@@ -71,26 +71,26 @@ sub register {
       $$output = '';
       $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
         and return
-        unless $rend || defined($content) && $content !~ /^\s*$/;
+        unless $template || defined($content) && $content !~ /^\s*$/;
       
-      $rend ||= $cgi->template($content);
+      $template ||= $cgi->template($content);
 
-      unless (ref $rend eq 'CODE') {
-        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $rend), $c);
+      unless (ref $template eq 'CODE') {
+        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c);
         return;
       }
 
       $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
-      $plugin->cache->{$name} ||= $rend;
+      $plugin->cache->{$name} ||= $template;
       
-      # Передать rendered результат обратно в рендерер
-      my @out = eval { $rend->($c, $cgi)};
+      my @out = eval { $template->($c, $cgi)};
       if ($@) {
         $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
         return;
       }
       
       $$output = join"\n", grep defined, @out;
+      utf8::decode($$output);
       
     }
   );
@@ -173,7 +173,7 @@ C<esc> is a shortcut for &CGI::escapeHTML.
   # Mojolicious::Lite
   plugin RenderCGI => {name => 'pl'};
 
-Handler name, defaults to 'cgi.pl'.
+Handler name, defaults to B<cgi.pl>.
 
 =head2 default (bool)
 
@@ -181,7 +181,7 @@ When C<true> then default handler. Defaults - 0 (no this default handler for app
 
   default => 1,
 
-Is similar to C<$app->defaults(handler=>'cgi.pl');>
+Is similar to C<$app->defaults(handler=> <name above>);>
 
 =head2 import ( string (space delims) | arrayref )
 

@@ -59,7 +59,12 @@
         color: #eee;
         text-shadow: #333 0 1px 0;
       }
-      .important { background-color: rgba(47, 48, 50, .75) }
+      /*.important { background-color: rgba(47, 48, 50, .75) }*/
+      .important {
+         background-color: rgba(47, 48, 50, .75);
+         border: 1px solid red;
+       }
+       .important > td.key { color: red;}
       .infobox { color: #333 }
       .infobox tr:nth-child(odd) .value { background-color: #ddeeff }
       .infobox tr:nth-child(even) .value { background-color: #eef9ff }
@@ -110,7 +115,8 @@
         border-bottom-right-radius: 5px;
       }
       #more .tap, #trace .tap { text-shadow: #ddd 0 1px 0 }
-      #request {
+/*тут*/
+      #request, #showcase {
         border-bottom: 0;
         border-top-left-radius: 5px;
         border-top-right-radius: 5px;
@@ -129,7 +135,7 @@
     </style>
   </head>
   <body>
-    %= include 'mojo/menubar'
+%#= include 'mojo/menubar'
     <script>
       function mojoDrawer (handle, drawer) {
         $(handle).click(function () {
@@ -154,7 +160,7 @@
         </tr>
       % end
       % if (my $exception = stash 'exception') {
-        <div id="nothing" class="box spaced"></div>
+%#        <div id="nothing" class="box spaced"></div>
         % my $cv = begin
           % my ($key, $value, $i) = @_;
           %= tag 'tr', $i ? (class => 'important') : (), begin
@@ -212,22 +218,22 @@
             </script>
           % }
         </div>
-        <div id="trace" class="box spaced">
-          % if (@{$exception->frames}) {
-            <div id="frames" class="infobox more">
-              <table>
-                % for my $frame (@{$exception->frames}) {
-                  <tr>
-                    <td class="striped value wide">
-                      <pre><%= $frame->[1] . ':' . $frame->[2] %></pre>
-                    </td>
-                  </tr>
-                % }
-              </table>
-            </div>
-            <div class="tap">tap for more</div>
-          % }
-        </div>
+%#        <div id="trace" class="box spaced">
+%#          % if (@{$exception->frames}) {
+%#            <div id="frames" class="infobox more">
+%#              <table>
+%#                % for my $frame (@{$exception->frames}) {
+%#                  <tr>
+%#                    <td class="striped value wide">
+%#                      <pre><%= $frame->[1] . ':' . $frame->[2] %></pre>
+%#                    </td>
+%#                  </tr>
+%#                % }
+%#              </table>
+%#            </div>
+%#            <div class="tap">tap for more</div>
+%#          % }
+%#        </div>
       % }
       % else {
         <div id="routes" class="box infobox spaced">
@@ -278,7 +284,7 @@
           %= $kv->(URL => $url->to_string)
           %= $kv->('Base URL' => $url->base->to_string)
           %= $kv->(Parameters => dumper $req->params->to_hash)
-          %= $kv->(Stash => dumper $snapshot)
+%#= $kv->(Stash => dumper $snapshot)
           %= $kv->(Session => dumper session)
           %= $kv->(Version => $req->version)
           % for my $name (sort @{$c->req->headers->names}) {
@@ -287,30 +293,30 @@
           % }
         </table>
       </div>
-      <div id="more" class="box infobox more spaced">
-        <div id="infos">
-          <table>
-            %= $kv->(Perl => "$^V ($^O)")
-            % my $version  = $Mojolicious::VERSION;
-            % my $codename = $Mojolicious::CODENAME;
-            %= $kv->(Mojolicious => "$version ($codename)")
-            %= $kv->(Home => app->home)
-            %= $kv->('Template paths' => dumper app->renderer->paths)
-            %= $kv->('Template classes' => dumper app->renderer->classes)
-            %= $kv->('Static paths' => dumper app->static->paths)
-            %= $kv->('Static classes' => dumper app->static->classes)
-            %= $kv->(Include => dumper \@INC)
-            %= $kv->(Config => dumper app->config)
-            %= $kv->(Moniker => app->moniker)
-            %= $kv->(Name => $0)
-            %= $kv->(Executable => $^X)
-            %= $kv->(PID => $$)
-            %= $kv->(Time => scalar localtime(time))
-          </table>
-        </div>
-        <div class="tap">tap for more</div>
-      </div>
-      % if (@{app->log->history}) {
+%#      <div id="more" class="box infobox more spaced">
+%#        <div id="infos">
+%#          <table>
+%#            %= $kv->(Perl => "$^V ($^O)")
+%#            % my $version  = $Mojolicious::VERSION;
+%#            % my $codename = $Mojolicious::CODENAME;
+%#            %= $kv->(Mojolicious => "$version ($codename)")
+%#            %= $kv->(Home => app->home)
+%#            %= $kv->('Template paths' => dumper app->renderer->paths)
+%#            %= $kv->('Template classes' => dumper app->renderer->classes)
+%#            %= $kv->('Static paths' => dumper app->static->paths)
+%#            %= $kv->('Static classes' => dumper app->static->classes)
+%#            %= $kv->(Include => dumper \@INC)
+%#            %= $kv->(Config => dumper app->config)
+%#            %= $kv->(Moniker => app->moniker)
+%#            %= $kv->(Name => $0)
+%#            %= $kv->(Executable => $^X)
+%#            %= $kv->(PID => $$)
+%#            %= $kv->(Time => scalar localtime(time))
+%#          </table>
+%#        </div>
+%#        <div class="tap">tap for more</div>
+%#      </div>
+      % if (0 && @{app->log->history}) {
         <div id="log" class="box infobox spaced">
           <table>
             % for my $msg (@{app->log->history}) {
@@ -323,11 +329,11 @@
           </table>
         </div>
       % }
-    </div>
-    <div id="footer">
-      %= link_to 'http://mojolicious.org' => begin
-        %= image '/mojo/logo-black.png', alt => 'Mojolicious logo'
-      % end
-    </div>
+%#    </div>
+%#    <div id="footer">
+%#      %= link_to 'http://mojolicious.org' => begin
+%#        %= image '/mojo/logo-black.png', alt => 'Mojolicious logo'
+%#      % end
+%#    </div>
   </body>
 </html>

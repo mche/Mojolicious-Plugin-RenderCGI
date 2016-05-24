@@ -34,7 +34,7 @@ get '/ep404' => sub {
 #~ app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
 
-plugin 'RenderCGI' => {default => 1, exception=> 'template',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
+plugin 'RenderCGI' => {default => 1, exception000=> 'template',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
 
 app->start;
 
@@ -55,10 +55,11 @@ __DATA__
 @@ index.html.cgi.pl
 $c->layout('main',);# handler=>'cgi.pl'
 $c->title('CGI');
-h1({}, esc '<CGI - фарева!'),
+h1({-class=>'h1'}, esc '<CGI - фарева!'),
 $c->include('part', handler=>'cgi.pl',),# handler still cgi? NO
 $c->include('файл',handler=>'cgi.pl',),
 $c->include('empty',handler=>'cgi.pl',),
+$c->include('die',handler=>'cgi.pl',),
 
 @@ part.html.cgi.pl
 $c->include('not exists',),
@@ -71,6 +72,8 @@ $self->app->log->info("The part has done")
 
 @@ empty.html.cgi.pl
 
+@@ die.html.cgi.pl
+die "Умер";
 
 @@ layouts/main.html.ep
 <html>
