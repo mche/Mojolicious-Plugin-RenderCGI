@@ -1,19 +1,23 @@
 package Mojolicious::Plugin::RenderCGI::CGI;
-use Mojo::Base -strict;
+use Mojo::Base 'CGI';
 #~ use Capture::Tiny qw(capture);
 
 sub new {
     my $proto = shift;
     my $class = ref $proto || $proto;
-    my $self = {};
-    bless ($self, $class);
-    $self->init(@_);
-    return $self;
+    $class->import(qw(:html), 'escapeHTML');
+    return $class->SUPER::new(@_);
+    #~ my $self = {};
+    #~ bless ($self, $class);
+    #~ $self->init(@_);
+    #~ return $self;
 }
 
-sub init {
+sub 000init {
   my $self = shift;
   my %arg = @_;
+  $arg{import} = [grep /\w/, split(/\s+/, $arg{import})]
+    unless ref $arg{import} eq 'ARRAY';
   push @{$arg{import}}, 'escapeHTML';
   require CGI;
   CGI->import(@{$arg{import}});
@@ -22,7 +26,7 @@ sub init {
 }
 
 
-sub compile {
+sub template {
   my $self = shift;
   my ($code) = @_;
 
@@ -31,6 +35,7 @@ sub {
 my (\$self, \$c,);
 \$self = \$c = shift;
 my \$cgi = shift;
+undef, # может комменты придут без кода
 $code
 }
 CODE

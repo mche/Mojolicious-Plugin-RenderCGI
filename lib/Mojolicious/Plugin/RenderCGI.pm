@@ -6,37 +6,26 @@ use Mojo::Util qw(encode md5_sum);
 
 our $VERSION = '0.03';
 my $pkg = __PACKAGE__;
-my %cache = ();
+
+has name => 'cgi.pl';
+has default => 0;
+has import => sub { [qw(:html :form)] };
+has exception => sub { {'handler'=>'ep', 'layout' => undef,} };
+has cache => sub { {} };
 
 sub register {
-  my ($self, $app, $conf) = @_;
+  my ($plugin, $app, $conf) = @_;
   
-  $conf->{name} ||= 'cgi.pl';
-  #~ $app->renderer->default_handler($conf->{name})
-    #~ if $conf->{default};
-  $conf->{import} ||= [qw(:html :form)];
-  $conf->{import} = [grep /\w/, split(/\s+/, $conf->{import})]
-    unless ref $conf->{import};
-  #~ $conf->{skip_fatals} //= $app->mode eq 'development' ? 0 : 1;
-  $conf->{exception} //= {'handler'=>'ep', 'layout' => undef,};
-  #~ $conf->{not_found} //= $app->mode eq 'development' ? 'template' : 'exception';
+  map $plugin->$_($conf->{$_}), grep defined($conf->{$_}), qw(name default import exception);
+  #~ $app->renderer->default_handler($plugin->name) не работает
+  $app->log->debug("Set default handler ", $plugin->name)
+    and $app->defaults('handler'=>$plugin->name)
+    if $plugin->default;
     
-  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(
-    import=>$conf->{import},
-  );
-  
-  my $enough = sub {# харе
-    my ($error, $c) = @_;
-    $c->stash(%{$conf->{exception}})
-      and die $error
-      if ref $conf->{exception} eq 'HASH';
-    
-    $app->log->error($error);# лог после die!
-    return $conf->{exception} eq 'template' ? $error : '';
-  };
+  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(@{$plugin->import},);
   
   $app->renderer->add_handler(
-    $conf->{name} => sub {
+    $plugin->name => sub {
       my ($r, $c, $output, $options) = @_;
       #~ $app->log->debug($app->dumper($options));
       
@@ -45,7 +34,7 @@ sub register {
       my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
       return unless defined($name //= $r->template_name($options));
       
-      my ($rend, $from) = ($cache{$name}, 'cache');# подходящий шаблон из кэша 
+      my ($rend, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
       
       my $stash = $c->stash($pkg);
       $c->stash($pkg => {stack => []})
@@ -53,7 +42,7 @@ sub register {
       $stash ||= $c->stash($pkg);
       my $last_template = $stash->{stack}[-1];
       if ($last_template && $last_template eq $name) {
-        $$output = $enough->("Stop looping template [$name]!", $c);
+        $$output = $plugin->error("Stop looping template [$name]!", $c);
         return;
       }
       push @{$stash->{stack}}, $name;
@@ -72,7 +61,7 @@ sub register {
               ($content, $from) = ($file->slurp, 'file');
               
             } else {
-              $$output = $enough->(sprintf(qq{Template "%s" does not found}, $name), $c);
+              $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
               return;
             }
           }
@@ -84,20 +73,20 @@ sub register {
         and return
         unless $rend || defined($content) && $content !~ /^\s*$/;
       
-      $rend ||= $cgi->compile($content);
+      $rend ||= $cgi->template($content);
 
       unless (ref $rend eq 'CODE') {
-        $$output = $enough->(sprintf(qq{Compile error template "%s": %s}, $name // $from, $rend), $c);
+        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $rend), $c);
         return;
       }
 
       $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
-      $cache{$name} ||= $rend;
+      $plugin->cache->{$name} ||= $rend;
       
       # Передать rendered результат обратно в рендерер
-      my @out = eval { $rend->($c, $cgi->{cgi})};
+      my @out = eval { $rend->($c, $cgi)};
       if ($@) {
-        $$output = $enough->(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
+        $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
         return;
       }
       
@@ -107,6 +96,15 @@ sub register {
   );
 }
 
+sub error {# харе
+    my ($plugin, $error, $c) = @_;
+    $c->stash(%{$plugin->exception})
+      and die $error
+      if ref($plugin->exception) eq 'HASH';
+    
+    $c->app->log->error($error);# лог после die!
+    return $plugin->exception eq 'template' ? $error : '';
+  };
 
 1;
 
@@ -132,15 +130,6 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
 =head1 SYNOPSIS
 
   $app->plugin('RenderCGI');
-  
-  # Set as default handler
-  $app->renderer->default_handler('cgi.pl');
-  # or same
-  $app->defaults(handler=>'cgi.pl');
- 
-  # Render without setting as default handler
-  $c->render(handler => 'cgi.pl');
-  
 
 =head1 Template
 
@@ -149,7 +138,7 @@ Template is a Perl code that generate content as list of statements. Similar to 
   # $c and $self already are controller
   # $cgi is a CGI object (OO-style)
   
-  $c->layout('default', handler=>'ep',);# set handler 'ep' for all includes !!!
+  $c->layout('default', handler=>'ep',);# set handler 'ep' for all templates/includes !!! even default handler cgi
   my $foo = $c->stash('foo')
     or die "Where is your FOO?";
   
@@ -157,10 +146,10 @@ Template is a Perl code that generate content as list of statements. Similar to 
   #======= content comma list! ===========
   #=======================================
   
-  h1({}, "Welcome"),
+  h1({}, "Welcome"),# but this template handlered cgi!
   
   $c->include('foo', handler=>'cgi.pl'),# change handler against layout
-  $c->include('bar'); # handler still "cgi.pl" unless template "foo" (and its includes) didn`t changes it
+  $c->include('bar'); # handler still "ep" unless template "foo" (and its includes) didn`t changes it by $c->stash('handler'=>...)
   
   <<END_HTML,
   <!-- comment -->
@@ -169,7 +158,7 @@ Template is a Perl code that generate content as list of statements. Similar to 
   $self->app->log->info("Template has done")
     && undef,
 
-There are NO Mojolicious helpers without OO-style: B<$c->> OR B<$self->> prefix.
+There are NO Mojolicious helpers without OO-style prefixes: C<$c->> OR C<$self->>.
 
 B<REMEMBER!> Escapes untrusted data. No auto escapes!
 
@@ -186,9 +175,13 @@ C<esc> is a shortcut for &CGI::escapeHTML.
 
 Handler name, defaults to 'cgi.pl'.
 
-=head2 default (bool) NOT WORKS!
+=head2 default (bool)
 
-When C<true> then c<$app->renderer->default_handler(<name above>);>. Defaults - undef (non default handler for app).
+When C<true> then default handler. Defaults - 0 (no this default handler for app).
+
+  default => 1,
+
+Is similar to C<$app->defaults(handler=>'cgi.pl');>
 
 =head2 import ( string (space delims) | arrayref )
 

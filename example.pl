@@ -31,10 +31,10 @@ get '/ep404' => sub {
 };
 
 #~ app->renderer->default_handler('cgi');
-app->defaults(handler=>'cgi.pl');
+#~ app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
 
-plugin 'RenderCGI'=> {exception=> 'template',};#'name'=>'cgi.pl'
+plugin 'RenderCGI' => {default => 1, exception=> 'template',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
 
 app->start;
 
@@ -53,12 +53,12 @@ __DATA__
 % include 'loop1';
 
 @@ index.html.cgi.pl
-$c->layout('main',);# handler=>'ep'
+$c->layout('main',);# handler=>'cgi.pl'
 $c->title('CGI');
 h1({}, esc '<CGI - фарева!'),
 $c->include('part', handler=>'cgi.pl',),# handler still cgi? NO
-$c->include('файл',),
-$c->include('empty',),
+$c->include('файл',handler=>'cgi.pl',),
+$c->include('empty',handler=>'cgi.pl',),
 
 @@ part.html.cgi.pl
 $c->include('not exists',),
