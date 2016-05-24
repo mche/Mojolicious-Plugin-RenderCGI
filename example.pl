@@ -55,7 +55,7 @@ __DATA__
 % include 'loop1';
 
 @@ index.html.cgi.pl
-$c->layout('main',);# handler=>'cgi.pl'
+$c->layout('main', handler000=>'ep');# handler=>'cgi.pl'
 $c->title('CGI');
 h1({-class=>'h1'}, esc '<CGI - фарева!'),
 $c->include('part', handler=>'cgi.pl',),# handler still cgi? NO

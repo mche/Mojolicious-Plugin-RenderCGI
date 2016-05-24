@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
@@ -85,6 +85,7 @@ sub handler {
     unless $template || defined($content) && $content !~ /^\s*$/;
   
   my $cgi = $plugin->cgi;
+  utf8::decode($content);
   $template ||= $cgi->template($content);
 
   unless (ref $template eq 'CODE') {
@@ -102,7 +103,6 @@ sub handler {
   }
   
   $$output = join"\n", grep defined, @out;
-  utf8::decode($$output);
   
 }
 
@@ -131,7 +131,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.06
+0.07
 
 =head1 NAME
 
