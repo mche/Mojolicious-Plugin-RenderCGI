@@ -6,6 +6,8 @@ use Test::More;
 
 plan tests => 1;
 
+use Mojolicious::Plugin::RenderCGI;
+
 BEGIN {
     use_ok( 'Mojolicious::Plugin::RenderCGI' ) || print "Bail out!\n";
 }

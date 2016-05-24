@@ -8,23 +8,7 @@ sub new {
     $class->import(@_, 'escapeHTML', '-utf8');
     my $cgi = $class->SUPER::new();
     return $cgi;
-    #~ my $self = {};
-    #~ bless ($self, $class);
-    #~ $self->init(@_);
-    #~ return $self;
 }
-
-#~ sub 000init {
-  #~ my $self = shift;
-  #~ my %arg = @_;
-  #~ $arg{import} = [grep /\w/, split(/\s+/, $arg{import})]
-    #~ unless ref $arg{import} eq 'ARRAY';
-  #~ push @{$arg{import}}, 'escapeHTML';
-  #~ require CGI;
-  #~ CGI->import(@{$arg{import}});
-  #~ $self->{cgi} = CGI->new();
-  #~ return $self;
-#~ }
 
 
 sub template {

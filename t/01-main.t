@@ -58,7 +58,7 @@ $t->get_ok('/will_not_found')->status_is(200)
   ->content_is('Template "will_not_found.html.cgi.pl" does not found')
   ;
 
-plugin 'RenderCGI' , exception =>'skip',};
+plugin 'RenderCGI' => {default => 1, exception =>'skip',};
 
 $t = Test::Mojo->new;
 

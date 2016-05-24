@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.03';
+our $VERSION = '0.05';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
@@ -18,11 +18,15 @@ sub register {
   
   map $plugin->$_($conf->{$_}), grep defined($conf->{$_}), qw(name default import exception);
   #~ $app->renderer->default_handler($plugin->name) не работает
-  $app->log->debug("Set default handler ", $plugin->name)
+  $app->log->debug("Set default render handler ".$plugin->name)
     and $app->defaults('handler'=>$plugin->name)
     if $plugin->default;
     
-  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(ref($plugin->import) eq 'ARRAY' ? @{$plugin->import} : (grep /\w/, split(/\s+/, $plugin->import)),);
+  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(
+    ref($plugin->import) eq 'ARRAY'
+      ? @{$plugin->import}
+      : (grep /\w/, split(/\s+/, $plugin->import)),
+    );
   
   $app->renderer->add_handler(
     $plugin->name => sub {
@@ -121,7 +125,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.03
+0.05
 
 =head1 NAME
 
