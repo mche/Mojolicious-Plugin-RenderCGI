@@ -4,13 +4,21 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
 has default => 0;
 has import => sub { [qw(:html :form)] };
 has exception => sub { {'handler'=>'ep', 'layout' => undef,} };
+has cgi => sub {
+  my $self = shift;
+  Mojolicious::Plugin::RenderCGI::CGI->new(
+    ref($self->import) eq 'ARRAY'
+      ? @{$self->import}
+      : (grep /\w/, split(/\s+/, $self->import)),
+    )
+};
 has cache => sub { {} };
 
 sub register {
@@ -22,82 +30,80 @@ sub register {
     and $app->defaults('handler'=>$plugin->name)
     if $plugin->default;
     
-  my $cgi = Mojolicious::Plugin::RenderCGI::CGI->new(
-    ref($plugin->import) eq 'ARRAY'
-      ? @{$plugin->import}
-      : (grep /\w/, split(/\s+/, $plugin->import)),
-    );
-  
   $app->renderer->add_handler(
-    $plugin->name => sub {
-      my ($r, $c, $output, $options) = @_;
-      #~ $app->log->debug($app->dumper($options));
+    $plugin->name => sub {$plugin->handler(@_)}
+  );
+}
+
+sub handler {
+  my ($plugin, $r, $c, $output, $options) = @_;
+  my $app = $c->app;
+  #~ $app->log->debug($app->dumper($options));
+  
+  # относительный путь шаблона
+  my $content = $options->{inline};# встроенный шаблон
+  my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
+  return unless defined($name //= $r->template_name($options));
+  
+  my ($template, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
+  
+  my $stash = $c->stash($pkg);
+  $c->stash($pkg => {stack => []})
+    unless $stash;
+  $stash ||= $c->stash($pkg);
+  my $last_template = $stash->{stack}[-1];
+  if ($last_template && $last_template eq $name) {
+    $$output = $plugin->error("Stop looping template [$name]!", $c);
+    return;
+  }
+  push @{$stash->{stack}}, $name;
+  
+  unless ($template) {#не кэш
+    if (defined $content) {# инлайн
+      $from = 'inline';
+    } else {
+      # подходящий шаблон в секции DATA
+      ($content, $from) = ($r->get_data_template($options), 'DATA section');#,, $name
       
-      # относительный путь шаблона
-      my $content = $options->{inline};# встроенный шаблон
-      my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
-      return unless defined($name //= $r->template_name($options));
-      
-      my ($template, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
-      
-      my $stash = $c->stash($pkg);
-      $c->stash($pkg => {stack => []})
-        unless $stash;
-      $stash ||= $c->stash($pkg);
-      my $last_template = $stash->{stack}[-1];
-      if ($last_template && $last_template eq $name) {
-        $$output = $plugin->error("Stop looping template [$name]!", $c);
-        return;
-      }
-      push @{$stash->{stack}}, $name;
-      
-      unless ($template) {#не кэш
-        if (defined $content) {# инлайн
-          $from = 'inline';
-        } else {
-          # подходящий шаблон в секции DATA
-          ($content, $from) = ($r->get_data_template($options), 'DATA section');#,, $name
+      unless (defined $content) {# file
+      #  абсолютный путь шаблона
+        if (my $path = $r->template_path($options)) {
+          my $file = Mojo::Asset::File->new(path => $path);
+          ($content, $from) = ($file->slurp, 'file');
           
-          unless (defined $content) {# file
-          #  абсолютный путь шаблона
-            if (my $path = $r->template_path($options)) {
-              my $file = Mojo::Asset::File->new(path => $path);
-              ($content, $from) = ($file->slurp, 'file');
-              
-            } else {
-              $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
-              return;
-            }
-          }
+        } else {
+          $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
+          return;
         }
       }
-      
-      $$output = '';
-      $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
-        and return
-        unless $template || defined($content) && $content !~ /^\s*$/;
-      
-      $template ||= $cgi->template($content);
-
-      unless (ref $template eq 'CODE') {
-        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c);
-        return;
-      }
-
-      $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
-      $plugin->cache->{$name} ||= $template;
-      
-      my @out = eval { $template->($c, $cgi)};
-      if ($@) {
-        $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
-        return;
-      }
-      
-      $$output = join"\n", grep defined, @out;
-      utf8::decode($$output);
-      
     }
-  );
+  }
+  
+  $$output = '';
+  $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
+    and return
+    unless $template || defined($content) && $content !~ /^\s*$/;
+  
+  my $cgi = $plugin->cgi;
+  $template ||= $cgi->template($content);
+
+  unless (ref $template eq 'CODE') {
+    $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c);
+    return;
+  }
+
+  $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
+  $plugin->cache->{$name} ||= $template;
+  
+  my @out = eval { $template->($c, $cgi)};
+  if ($@) {
+    $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
+    return;
+  }
+  
+  $$output = join"\n", grep defined, @out;
+  utf8::decode($$output);
+  
 }
 
 sub error {# харе
@@ -125,7 +131,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.05
+0.06
 
 =head1 NAME
 
