@@ -137,7 +137,7 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
 
 =head1 Template
 
-Template is a Perl code that generate content as list of statements. Similar to C<do> BLOCK. Template file name like "templates/foo/bar.html.cgi.pl"
+Template is a Perl code that generate content as list of statements. Similar to C<do BLOCK>. Template file name like "templates/foo/bar.html.cgi.pl"
 
   # $c and $self already are controller
   # $cgi is a CGI object (OO-style)
@@ -162,7 +162,7 @@ Template is a Perl code that generate content as list of statements. Similar to 
   $self->app->log->info("Template has done")
     && undef,
 
-There are NO Mojolicious helpers without OO-style prefixes: C<$c->> OR C<$self->>.
+There are NO Mojolicious helpers without OO-style prefixes: C<< $c-> >> OR C<< $self-> >>.
 
 B<REMEMBER!> Escapes untrusted data. No auto escapes!
 
@@ -185,7 +185,7 @@ When C<true> then default handler. Defaults - 0 (no this default handler for app
 
   default => 1,
 
-Is similar to C<$app->defaults(handler=> <name above>);>
+Is similar to C<< $app->defaults(handler=> <name above>); >>
 
 =head2 import ( string (space delims) | arrayref )
 
@@ -208,13 +208,13 @@ To show fatals as standard Mojolicious 'exception.<mode>.html.ep' page  - set ha
 
 Overwise fatals are skips (empty string whole template).
 
-By default set to hashref {'handler'=>'ep', 'layout' => undef,}.
+By default set to hashref C<{'handler'=>'ep', 'layout' => undef,}>.
 
   exception => 'template', 
 
 =head1 Methods, subs, helpers...
 
-Implements register method only. Register new renderer handler 'cgi'. No new helpers.
+Implements register method only. Register new renderer handler. No new helpers.
 
 =head1 SEE ALSO
 

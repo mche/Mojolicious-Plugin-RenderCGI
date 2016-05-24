@@ -18,6 +18,8 @@ EOT
 
 get '/empty' => sub {1};
 
+get '/die' => sub {1};
+
 get '/will_not_found' => sub {1};
 
 get '/ep' => sub {
@@ -34,7 +36,7 @@ get '/ep404' => sub {
 #~ app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
 
-plugin 'RenderCGI' => {default => 1, exception=> 'template00',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
+plugin 'RenderCGI' => {default => 1, exception=> 'template',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
 
 app->start;
 
