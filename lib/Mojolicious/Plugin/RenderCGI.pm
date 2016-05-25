@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.07';
+our $VERSION = '0.071';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
@@ -75,6 +75,7 @@ sub handler {
           $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
           return;
         }
+        utf8::decode($content);
       }
     }
   }
@@ -85,7 +86,6 @@ sub handler {
     unless $template || defined($content) && $content !~ /^\s*$/;
   
   my $cgi = $plugin->cgi;
-  utf8::decode($content);
   $template ||= $cgi->template($content);
 
   unless (ref $template eq 'CODE') {
@@ -131,7 +131,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.07
+0.071
 
 =head1 NAME
 
