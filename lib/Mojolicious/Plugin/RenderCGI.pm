@@ -80,22 +80,22 @@ sub handler {
           return;
         }
       }
-      
-      $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
-        and return
-        unless $content =~ /\w/;
-      
-      utf8::decode($content);
-      
-      $template = $cgi->template($content)
-        or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
-        and return;
-      
-      $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $template), $c)
-        and return
-        unless ref $template eq 'CODE';
-      
     }
+    
+    $app->log->debug(sprintf(qq{Empty or nothing template "%s"}, $name))
+      and return
+      unless $content =~ /\w/;
+    
+    utf8::decode($content);
+    
+    $template = $cgi->template($content)
+      or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
+      and return;
+    
+    $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $template), $c)
+      and return
+      unless ref $template eq 'CODE';
+    
   }
   
   $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
