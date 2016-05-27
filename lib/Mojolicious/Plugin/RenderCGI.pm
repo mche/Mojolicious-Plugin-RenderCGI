@@ -79,22 +79,22 @@ sub handler {
           $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
           return;
         }
-        
-        $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
-          and return
-          if defined($content) && $content !~ /^\s*$/;
-        
-        utf8::decode($content);
-        
-        $template = $cgi->template($content)
-          or $$output = $plugin->error(sprintf(qq{Something wrong for template "%s"}, $name), $c)
-          and return;
-        
-        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c)
-          and return
-          unless ref $template eq 'CODE';
-        
       }
+      
+      $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
+        and return
+        unless $content =~ /\w/;
+      
+      utf8::decode($content);
+      
+      $template = $cgi->template($content)
+        or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
+        and return;
+      
+      $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $template), $c)
+        and return
+        unless ref $template eq 'CODE';
+      
     }
   }
   
