@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::CGI;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.071';
+our $VERSION = '0.072';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
@@ -58,6 +58,10 @@ sub handler {
   }
   push @{$stash->{stack}}, $name;
   
+  $$output = '';
+  
+  my $cgi = $plugin->cgi;
+  
   unless ($template) {#не кэш
     if (defined $content) {# инлайн
       $from = 'inline';
@@ -75,24 +79,25 @@ sub handler {
           $$output = $plugin->error(sprintf(qq{Template "%s" does not found}, $name), $c);
           return;
         }
+        
+        $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
+          and return
+          if defined($content) && $content !~ /^\s*$/;
+        
         utf8::decode($content);
+        
+        $template = $cgi->template($content)
+          or $$output = $plugin->error(sprintf(qq{Something wrong for template "%s"}, $name), $c)
+          and return;
+        
+        $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c)
+          and return
+          unless ref $template eq 'CODE';
+        
       }
     }
   }
   
-  $$output = '';
-  $app->log->debug(sprintf(qq{Empty template "%s"}, $name))
-    and return
-    unless $template || defined($content) && $content !~ /^\s*$/;
-  
-  my $cgi = $plugin->cgi;
-  $template ||= $cgi->template($content);
-
-  unless (ref $template eq 'CODE') {
-    $$output = $plugin->error(sprintf(qq{Compile error template "%s": %s}, $name // $from, $template), $c);
-    return;
-  }
-
   $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
   $plugin->cache->{$name} ||= $template;
   
@@ -131,7 +136,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.071
+0.072
 
 =head1 NAME
 
