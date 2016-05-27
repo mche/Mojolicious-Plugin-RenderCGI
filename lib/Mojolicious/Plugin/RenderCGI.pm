@@ -102,10 +102,9 @@ sub handler {
   $plugin->cache->{$name} ||= $template;
   
   my @out = eval { $template->($c, $cgi)};
-  if ($@) {
-    $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c);
-    return;
-  }
+  $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c)
+    and return
+    if $@;
   
   $$output = join"\n", grep defined, @out;
   
