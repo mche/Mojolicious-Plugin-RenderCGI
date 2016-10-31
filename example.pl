@@ -65,11 +65,11 @@ $c->include('die',handler=>'cgi.pl',),
 
 @@ part.html.cgi.pl
 $c->include('not exists',),
-hr,
+hr(),
 <<HTML,
 <!-- end part -->
 HTML
-$self->app->log->info("The part has done")
+$c->app->log->info("The part has done")
   && undef,
 
 @@ empty.html.cgi.pl

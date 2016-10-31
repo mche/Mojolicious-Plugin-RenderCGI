@@ -7,6 +7,7 @@ use Mojo::Util qw(decode encode md5_sum);
 our $VERSION = '0.073';
 my $pkg = __PACKAGE__;
 
+has qw(app);
 has name => 'cgi.pl';
 has default => 0;
 has import => sub { [qw(:html :form)] };
@@ -15,6 +16,8 @@ has cache => sub { {} };
 
 sub register {
   my ($plugin, $app, $conf) = @_;
+  
+  $plugin->app($app);
   
   map $plugin->$_($conf->{$_}), grep defined($conf->{$_}), qw(name default import exception);
   #~ $app->renderer->default_handler($plugin->name) не работает
@@ -84,7 +87,7 @@ sub handler {
       #~ or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
       #~ and return;
     
-    $template = Mojolicious::Plugin::RenderCGI::Template->new(_import=>$plugin->import);
+    $template = Mojolicious::Plugin::RenderCGI::Template->new(_import=>$plugin->import, _plugin=>$plugin);
 
     my $err = $template->_compile($content);
     

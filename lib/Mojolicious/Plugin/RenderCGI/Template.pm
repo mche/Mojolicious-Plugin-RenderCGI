@@ -4,15 +4,15 @@ use CGI;
 
 my $CGI = CGI->new ;
 
-has [qw(_import _content)];
+has [qw(_plugin _import _content)];
 #~ has _cgi => sub { CGI->new };
 
 sub new {
     my $self = shift->SUPER::new(@_);
     CGI->import(
-      $self->import && ref($self->import) eq 'ARRAY'
-        ? @{$self->import}
-        : (grep /\w/, split(/\s+/, $self->import)),
+      $self->_import && ref($self->_import) eq 'ARRAY'
+        ? @{$self->_import}
+        : (grep /\w/, split(/\s+/, $self->_import)),
       'escapeHTML',
       '-utf8',
     );
@@ -79,13 +79,16 @@ sub  AUTOLOAD {
     return $self->$func(@_);
   }
   
-  if ()
+  
   
   # non method
-
-  *$func = sub { return &CGI::_tag_func($tag,@_); };
-  
+  if ($CGI->can($func)) {
+    *$func = sub { $CGI->$func(@_); };
+  } else {
+    *$func = sub { return &CGI::_tag_func($tag,@_); };
+  }
   return &$func(@_);
+  
 }
 
 
