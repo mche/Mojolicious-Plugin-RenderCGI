@@ -20,6 +20,10 @@ get '/empty' => sub {1};
 
 get '/die' => sub {1};
 
+get '/compile_err' => sub {1};
+
+get '/include_not_exist' => sub {1};
+
 get '/will_not_found' => sub {1};
 
 get '/ep' => sub {
@@ -46,25 +50,28 @@ __DATA__
 % layout 'main';
 % title 'EP';
 <h1>EP - OK!</h1>
-% include 'loop1';
+<%= include 'part', handler=>'cgi.pl' %>
+DONE!
+
 
 @@ loop1.html.ep
-%# include 'loop2';
+loop1.ep
 
 @@ loop2.html.ep
 % include 'loop1';
 
 @@ индекс.html.cgi.pl
-$c->layout('main', handler000=>'ep');# handler=>'cgi.pl'
-$c->title('CGI');
+$c->layout('main', handler=>'ep');# handler=>'cgi.pl'
+$c->title('-CGI-');
 h1({-class=>'hh1'}, esc '<CGI - фарева!>'),
 $c->include('part', handler=>'cgi.pl',),# handler still cgi? NO
 $c->include('файл',handler=>'cgi.pl',),
 $c->include('empty',handler=>'cgi.pl',),
 $c->include('die',handler=>'cgi.pl',),
+$c->include('loop1',handler=>'ep',),
 
 @@ part.html.cgi.pl
-$c->include('not exists',),
+#
 hr(),
 <<HTML,
 <!-- end part -->
@@ -78,6 +85,13 @@ $self->ons_list({-class=>"class2",}, [1,2,4,]),
 
 @@ die.html.cgi.pl
 die "Умер";
+
+@@ compile_err.html.cgi.pl
+-bla-
+
+@@ include_not_exist.html.cgi.pl
+'will not found error',
+$c->include('not exists',),
 
 @@ layouts/main.html.ep
 <html>

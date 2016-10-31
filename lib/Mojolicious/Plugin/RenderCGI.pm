@@ -150,10 +150,10 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
 
 Template is a Perl code that generate content as list of statements. Similar to C<do BLOCK>. Template file name like "templates/foo/bar.html.cgi.pl"
 
-  # Predifined variables:
-  # $self is a Mojolicious::Plugin::RenderCGI::Template object
-  # $c is a current controller
-  # $cgi is a CGI object for OO-style
+  # Predefined variables:
+  # $self  is a     Mojolicious::Plugin::RenderCGI::Template object
+  # $c     is a     current controller object
+  # $cgi   is a     CGI object
   
   $c->layout('default', handler=>'ep',);# set handler 'ep' for all templates/includes !!! even default handler cgi
   my $foo = $c->stash('foo')
@@ -191,8 +191,6 @@ In template you can generate any tag:
   foo_tag({-class=>"class1",}, '...'),
   # same
   $self->foo_tag({-class=>"class1",}, '...'),
-
-Be carefully that unknown subs will search inside CGI.pm module first and if not found generate appropriate tags.
 
 =head1 OPTIONS
 
