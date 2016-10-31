@@ -131,7 +131,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.072
+0.073
 
 =head1 NAME
 
@@ -145,8 +145,9 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
 
 Template is a Perl code that generate content as list of statements. Similar to C<do BLOCK>. Template file name like "templates/foo/bar.html.cgi.pl"
 
-  # $c and $self already are controller
-  # $cgi is a CGI object (OO-style)
+  # $self is a Mojolicious::Plugin::RenderCGI::Template object
+  # $c is a current controller
+  # $cgi is a CGI object for OO-style
   
   $c->layout('default', handler=>'ep',);# set handler 'ep' for all templates/includes !!! even default handler cgi
   my $foo = $c->stash('foo')
@@ -168,7 +169,7 @@ Template is a Perl code that generate content as list of statements. Similar to 
   $self->app->log->info("Template has done")
     && undef,
 
-There are NO Mojolicious helpers without OO-style prefixes: C<< $c-> >> OR C<< $self-> >>.
+There are NO Mojolicious helpers without OO-style prefixes: C<< $c-> >>.
 
 B<REMEMBER!> Escapes untrusted data. No auto escapes!
 
@@ -197,9 +198,9 @@ Is similar to C<< $app->defaults(handler=> <name above>); >>
 
 What subs do you want from CGI.pm import
 
-  $app->plugin('RenderCGI', import=>':html -any');
+  $app->plugin('RenderCGI', import=>':html ...');
   # or 
-  $app->plugin('RenderCGI', import=>[qw(:html -any)]);
+  $app->plugin('RenderCGI', import=>[qw(:html ...)]);
 
 See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE".
 Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).

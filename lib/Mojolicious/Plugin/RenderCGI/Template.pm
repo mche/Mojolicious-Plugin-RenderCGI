@@ -2,8 +2,10 @@ package Mojolicious::Plugin::RenderCGI::Template;
 use Mojo::Base -base;
 use CGI;
 
+my $CGI = CGI->new ;
+
 has [qw(_import _content)];
-has _cgi => sub { CGI->new };
+#~ has _cgi => sub { CGI->new };
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -22,7 +24,7 @@ sub _compile {
   my $self = shift;
   my ($code) = @_;
 
-  $self->content(eval <<CODE);
+  $self->_content(eval <<CODE);
 sub {
   my (\$self, \$c, \$cgi) = \@_;
   undef, # может комменты придут без кода
@@ -37,7 +39,7 @@ CODE
 sub _run {
   my ($self, $c) = @_;
   
-  $self->_content->($self, $c,$self->_cgi);
+  $self->_content->($self, $c, $CGI);
 }
 
 sub esc { escapeHTML(@_) }
@@ -48,19 +50,39 @@ sub  AUTOLOAD {
   my ($package, $func) = our $AUTOLOAD =~ /^(.+)::(.+)$/;
   my $tag = $func =~ s/_/-/gr;
   my $package_arg = ref $_[0];
-  if ($package eq $package_arg) { # method
-    no strict 'refs';
-    no warnings 'redefine';
+  no strict 'refs';
+  no warnings 'redefine';
+  
+  my $cgi_meth = sub {
     my $self = shift;
-    *{"${package}::$func"} = sub {
-      my $self = shift;
-      return &CGI::_tag_func($tag,@_);
+    return $CGI->$func(@_);
+  };
+  
+  my $cgi_tag = sub {
+    my $self = shift;
+    return &CGI::_tag_func($tag,@_);
+  };
+  
+  if ($package eq $package_arg) { # method
+    
+    my $self = shift;
+    
+    if ($CGI->can($func)) {
       
-    };
+      *{"${package}::$func"} = $cgi_meth;
+      
+    } else { # HTML tag
+      
+      *{"${package}::$func"} = $cgi_tag;
+      
+    }
     return $self->$func(@_);
   }
+  
+  if ()
+  
   # non method
-    
+
   *$func = sub { return &CGI::_tag_func($tag,@_); };
   
   return &$func(@_);
