@@ -1,24 +1,16 @@
 package Mojolicious::Plugin::RenderCGI;
 
 use Mojo::Base 'Mojolicious::Plugin';
-use Mojolicious::Plugin::RenderCGI::CGI;
+use Mojolicious::Plugin::RenderCGI::Template;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.072';
+our $VERSION = '0.073';
 my $pkg = __PACKAGE__;
 
 has name => 'cgi.pl';
 has default => 0;
 has import => sub { [qw(:html :form)] };
 has exception => sub { {'handler'=>'ep', 'layout' => undef,} };
-#~ has cgi => sub {
-  #~ my $self = shift;
-  #~ Mojolicious::Plugin::RenderCGI::CGI->new(
-    #~ ref($self->import) eq 'ARRAY'
-      #~ ? @{$self->import}
-      #~ : (grep /\w/, split(/\s+/, $self->import)),
-    #~ )
-#~ };
 has cache => sub { {} };
 
 sub register {
@@ -60,7 +52,7 @@ sub handler {
   
   $$output = '';
   
-  my $cgi = $plugin->cgi;
+  #~ my $cgi = $plugin->cgi;
   
   unless ($template) {#не кэш
     if (defined $content) {# инлайн
@@ -88,20 +80,24 @@ sub handler {
     
     utf8::decode($content);
     
-    $template = $cgi->template($content)
-      or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
-      and return;
+    #~ $template = $cgi->template($content)
+      #~ or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
+      #~ and return;
     
-    $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $template), $c)
+    $template = Mojolicious::Plugin::RenderCGI::Template->new(import=>$plugin->import);
+
+    my $err = $template->compile($content);
+    
+    $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $err), $c)
       and return
-      unless ref $template eq 'CODE';
+      unless ref $err;
     
   }
   
   $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
   $plugin->cache->{$name} ||= $template;
   
-  my @out = eval { $template->($c, $cgi)};
+  my @out = eval { $template->run($c)};
   $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c)
     and return
     if $@;
