@@ -53,42 +53,35 @@ sub  AUTOLOAD {
   no strict 'refs';
   no warnings 'redefine';
   
-  my $cgi_meth = sub {
-    my $self = shift;
-    return $CGI->$func(@_);
-  };
-  
-  my $cgi_tag = sub {
-    my $self = shift;
-    return &CGI::_tag_func($tag,@_);
-  };
-  
   if ($package eq $package_arg) { # method
-    
     my $self = shift;
-    
     if ($CGI->can($func)) {
-      
-      *{"${package}::$func"} = $cgi_meth;
-      
+      *{"${package}::$func"} = &_cgi_meth($func);
     } else { # HTML tag
-      
-      *{"${package}::$func"} = $cgi_tag;
-      
+      *{"${package}::$func"} = &_cgi_tag($tag);
     }
     return $self->$func(@_);
   }
-  
-  
-  
+   
   # non method
   if ($CGI->can($func)) {
     *$func = sub { $CGI->$func(@_); };
   } else {
-    *$func = sub { return &CGI::_tag_func($tag,@_); };
+    *$func = &_cgi_tag($tag); # sub { return &CGI::_tag_func($tag,@_); };
   }
   return &$func(@_);
   
+}
+
+sub _cgi_method {
+  my $method = shift;
+  return sub { my $self = shift; $CGI->$method(@_); };
+}
+
+
+sub _cgi_tag = sub {
+  my $tag = shift;
+  return sub { &CGI::_tag_func($tag,@_); };
 }
 
 

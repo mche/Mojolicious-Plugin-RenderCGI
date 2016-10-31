@@ -116,7 +116,11 @@ sub error {# харе
       if ref($plugin->exception) eq 'HASH';
     
     $c->app->log->error($error);# лог после die!
-    return $plugin->exception eq 'template' ? $error : '';
+    return $error
+      if $plugin->exception eq 'template';
+    
+    return "<!-- $error -->"
+      if $plugin->exception =~ m'comment';
   };
 
 1;
