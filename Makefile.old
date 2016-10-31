@@ -190,6 +190,7 @@ PERL_ARCHIVE_AFTER =
 
 
 TO_INST_PM = 000test.pl \
+	README.pod \
 	example.pl \
 	lib/Mojolicious/Plugin/RenderCGI.pm \
 	lib/Mojolicious/Plugin/RenderCGI/Template.pm
@@ -884,6 +885,7 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  '000test.pl' '$(INST_LIB)/Mojolicious/Plugin/000test.pl' \
+	  'README.pod' '$(INST_LIB)/Mojolicious/Plugin/README.pod' \
 	  'example.pl' '$(INST_LIB)/Mojolicious/Plugin/example.pl' \
 	  'lib/Mojolicious/Plugin/RenderCGI.pm' 'blib/lib/Mojolicious/Plugin/RenderCGI.pm' \
 	  'lib/Mojolicious/Plugin/RenderCGI/Template.pm' 'blib/lib/Mojolicious/Plugin/RenderCGI/Template.pm' 
