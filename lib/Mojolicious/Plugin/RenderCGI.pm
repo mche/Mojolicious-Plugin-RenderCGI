@@ -11,14 +11,14 @@ has name => 'cgi.pl';
 has default => 0;
 has import => sub { [qw(:html :form)] };
 has exception => sub { {'handler'=>'ep', 'layout' => undef,} };
-has cgi => sub {
-  my $self = shift;
-  Mojolicious::Plugin::RenderCGI::CGI->new(
-    ref($self->import) eq 'ARRAY'
-      ? @{$self->import}
-      : (grep /\w/, split(/\s+/, $self->import)),
-    )
-};
+#~ has cgi => sub {
+  #~ my $self = shift;
+  #~ Mojolicious::Plugin::RenderCGI::CGI->new(
+    #~ ref($self->import) eq 'ARRAY'
+      #~ ? @{$self->import}
+      #~ : (grep /\w/, split(/\s+/, $self->import)),
+    #~ )
+#~ };
 has cache => sub { {} };
 
 sub register {
