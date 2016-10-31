@@ -213,9 +213,9 @@ Is similar to C<< $app->defaults(handler=> <name above>); >>
 
 What subs do you want from CGI.pm import
 
-  $app->plugin('RenderCGI', import=>':html ...');
+  $app->plugin('RenderCGI', cgi_import=>':html ...');
   # or 
-  $app->plugin('RenderCGI', import=>[qw(:html ...)]);
+  $app->plugin('RenderCGI', cgi_import=>[qw(:html ...)]);
 
 See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE".
 Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
