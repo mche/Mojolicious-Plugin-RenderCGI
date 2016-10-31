@@ -1,6 +1,4 @@
-use strict;
-use warnings;
-use utf8;
+use Mojo::Base -strict;
 
 use Test::More;
 use Mojolicious::Lite;
@@ -14,7 +12,7 @@ get '/ep' => sub {
 
 get '/cgi' => sub {
 	my $c = shift;
-} => 'index';
+} => 'индекс';
 
 get '/inline' => sub {
 	my $c = shift;
@@ -86,7 +84,7 @@ __DATA__
 % title 'EP';
 <h1>EP - OK!</h1>
 
-@@ index.html.cgi.pl
+@@ индекс.html.cgi.pl
 $c->layout('main',);# handler=>'ep'
 $c->title('CGI');
 h1({}, esc '<CGI - фарева!>'),

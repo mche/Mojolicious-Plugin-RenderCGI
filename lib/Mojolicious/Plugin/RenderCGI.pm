@@ -59,8 +59,6 @@ sub handler {
   
   $$output = '';
   
-  #~ my $cgi = $plugin->cgi;
-  
   unless ($template) {#не кэш
     if (defined $content) {# инлайн
       $from = 'inline';
