@@ -4,7 +4,7 @@ use CGI;
 
 my $CGI = CGI->new ;
 
-has [qw(_plugin _import _content)];
+has [qw(_plugin _import _content)];# _content has coderef, 
 #~ has _cgi => sub { CGI->new };
 
 sub new {
@@ -56,16 +56,16 @@ sub  AUTOLOAD {
   if ($package eq $package_arg) { # method
     my $self = shift;
     if ($CGI->can($func)) {
-      *{"${package}::$func"} = &_cgi_meth($func);
+      *{"${package}::$func"} = &_cgi_meth($func, 1);
     } else { # HTML tag
-      *{"${package}::$func"} = &_cgi_tag($tag);
+      *{"${package}::$func"} = &_cgi_tag($tag, 1);
     }
     return $self->$func(@_);
   }
    
   # non method
   if ($CGI->can($func)) {
-    *$func = sub { $CGI->$func(@_); };
+    *$func = &_cgi_meth($func); #sub { $CGI->$func(@_); };
   } else {
     *$func = &_cgi_tag($tag); # sub { return &CGI::_tag_func($tag,@_); };
   }
@@ -75,13 +75,15 @@ sub  AUTOLOAD {
 
 sub _cgi_method {
   my $method = shift;
-  return sub { my $self = shift; $CGI->$method(@_); };
+  my $flag_self = shift;
+  return sub { my $self = shift if $flag_self; $CGI->$method(@_); };
 }
 
 
-sub _cgi_tag = sub {
+sub _cgi_tag {
   my $tag = shift;
-  return sub { &CGI::_tag_func($tag,@_); };
+  my $flag_self = shift;
+  return sub { my $self = shift if $flag_self; &CGI::_tag_func($tag,@_); };
 }
 
 

@@ -36,7 +36,7 @@ get '/ep404' => sub {
 #~ app->defaults(handler=>'cgi.pl');
 # app->log->level('error');
 
-plugin 'RenderCGI' => {default => 1, exception=> 'template',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
+plugin 'RenderCGI' => {default => 1, exception=> 'comment',};#=> { name=>'pl', import=>':foo :bar'};#'name'=>'cgi.pl'
 
 app->start;
 
@@ -57,7 +57,7 @@ __DATA__
 @@ index.html.cgi.pl
 $c->layout('main', handler000=>'ep');# handler=>'cgi.pl'
 $c->title('CGI');
-h1({-class=>'h1'}, esc '<CGI - фарева!'),
+h1({-class=>'hh1'}, esc '<CGI - фарева!>'),
 $c->include('part', handler=>'cgi.pl',),# handler still cgi? NO
 $c->include('файл',handler=>'cgi.pl',),
 $c->include('empty',handler=>'cgi.pl',),
@@ -71,6 +71,8 @@ hr(),
 HTML
 $c->app->log->info("The part has done")
   && undef,
+ons_template({-class=>"class1",}, 123),
+$self->ons_list({-class=>"class2",}, [1,2,4,]),
 
 @@ empty.html.cgi.pl
 
