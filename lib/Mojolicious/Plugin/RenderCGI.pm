@@ -4,7 +4,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::Template;
 use Mojo::Util qw(decode encode md5_sum);
 
-our $VERSION = '0.073';
+our $VERSION = '0.100';
 my $pkg = __PACKAGE__;
 
 has qw(app);
@@ -138,7 +138,7 @@ sub error {# харе
 
 =head1 VERSION
 
-0.073
+0.100
 
 =head1 NAME
 
