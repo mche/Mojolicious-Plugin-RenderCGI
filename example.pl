@@ -7,7 +7,7 @@ use lib "$FindBin::Bin/lib";
 
 get '/cgi' => sub {
 	my $c = shift;
-} => 'index';
+} => 'индекс';
 
 get '/inline' => sub {
 	my $c = shift;
@@ -54,7 +54,7 @@ __DATA__
 @@ loop2.html.ep
 % include 'loop1';
 
-@@ index.html.cgi.pl
+@@ индекс.html.cgi.pl
 $c->layout('main', handler000=>'ep');# handler=>'cgi.pl'
 $c->title('CGI');
 h1({-class=>'hh1'}, esc '<CGI - фарева!>'),
@@ -86,7 +86,7 @@ die "Умер";
 </html>
 
 @@ layouts/main.html.cgi.pl
-charset('utf-8');
+$cgi->charset('utf-8');
 start_html(-title => $c->title,  -lang => 'ru-RU',),
 $c->content,
 $cgi->end_html,

@@ -2,15 +2,15 @@ package Mojolicious::Plugin::RenderCGI;
 
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojolicious::Plugin::RenderCGI::Template;
-use Mojo::Util qw(decode encode md5_sum);
+use Mojo::Util qw(encode md5_sum);
 
 our $VERSION = '0.100';
 my $pkg = __PACKAGE__;
 
 has qw(app);
-has name => 'cgi.pl';
+has handler_name => 'cgi.pl';
 has default => 0;
-has import => sub { [qw(:html :form)] };
+has cgi_import => sub { [qw(:html :form)] };
 has exception => sub { {'handler'=>'ep', 'layout' => undef,} };
 has cache => sub { {} };
 
@@ -20,13 +20,13 @@ sub register {
   $plugin->app($app);
   
   map $plugin->$_($conf->{$_}), grep defined($conf->{$_}), qw(name default import exception);
-  #~ $app->renderer->default_handler($plugin->name) не работает
-  $app->log->debug("Set default render handler ".$plugin->name)
-    and $app->defaults('handler'=>$plugin->name)
+  #~ $app->renderer->default_handler($plugin->handler_name) не работает
+  $app->log->debug("Set default render handler ".$plugin->handler_name)
+    and $app->defaults('handler'=>$plugin->handler_name)
     if $plugin->default;
     
   $app->renderer->add_handler(
-    $plugin->name => sub {$plugin->handler(@_)}
+    $plugin->handler_name => sub {$plugin->handler(@_)}
   );
 }
 
@@ -39,6 +39,10 @@ sub handler {
   my $content = $options->{inline};# встроенный шаблон
   my $name = defined $content ? md5_sum encode('UTF-8', $content) : undef;
   return unless defined($name //= $r->template_name($options));
+  
+  #~ my $url = Mojo::URL->new($name);
+  #~ ($name, my $param) = (url_unescape($url->path), $url->query->to_hash);
+    #~ utf8::decode($name);
   
   my ($template, $from) = ($plugin->cache->{$name}, 'cache');# подходящий шаблон из кэша 
   
@@ -83,11 +87,7 @@ sub handler {
     
     utf8::decode($content);
     
-    #~ $template = $cgi->template($content)
-      #~ or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
-      #~ and return;
-    
-    $template = Mojolicious::Plugin::RenderCGI::Template->new(_import=>$plugin->import, _plugin=>$plugin);
+    $template = Mojolicious::Plugin::RenderCGI::Template->new(_import=>$plugin->cgi_import, _plugin=>$plugin, );
 
     my $err = $template->_compile($content);
     
@@ -105,7 +105,7 @@ sub handler {
     and return
     if $@;
   
-  $$output = join"\n", grep defined, @out;
+  $$output = join "\n", grep defined, @out;
   
 }
 
@@ -152,6 +152,7 @@ Mojolicious::Plugin::RenderCGI - Rendering template with Perl code and CGI.pm fu
 
 Template is a Perl code that generate content as list of statements. Similar to C<do BLOCK>. Template file name like "templates/foo/bar.html.cgi.pl"
 
+  # Predifined variables:
   # $self is a Mojolicious::Plugin::RenderCGI::Template object
   # $c is a current controller
   # $cgi is a CGI object for OO-style
@@ -184,12 +185,23 @@ B<REMEMBER!> Escapes untrusted data. No auto escapes!
 
 C<esc> is a shortcut for &CGI::escapeHTML.
 
+=head1 NOTE about autoloading subs and methods
+
+In template you can generate any tag:
+
+  # <foo-tag class="class1">...</foo-tag>
+  foo_tag({-class=>"class1",}, '...'),
+  # same
+  $self->foo_tag({-class=>"class1",}, '...'),
+
+Be carefully that unknown subs will search inside CGI.pm module first and if not found generate appropriate tags.
+
 =head1 OPTIONS
 
-=head2 name ( string )
+=head2 handler_name ( string )
 
   # Mojolicious::Lite
-  plugin RenderCGI => {name => 'pl'};
+  plugin RenderCGI => {handler_name => 'pl'};
 
 Handler name, defaults to B<cgi.pl>.
 
@@ -201,7 +213,7 @@ When C<true> then default handler. Defaults - 0 (no this default handler for app
 
 Is similar to C<< $app->defaults(handler=> <name above>); >>
 
-=head2 import ( string (space delims) | arrayref )
+=head2 cgi_import ( string (space delims) | arrayref )
 
 What subs do you want from CGI.pm import
 
@@ -212,11 +224,15 @@ What subs do you want from CGI.pm import
 See at perldoc CGI.pm section "USING THE FUNCTION-ORIENTED INTERFACE".
 Default is ':html :form' (string) same as [qw(:html :form)] (arrayref).
 
-  import=>[], # none import, CGI OO-style only
+  cgi_import=>[], # none import subs CGI
 
 =head2 exception ( string | hashref )
 
 To show fatal errors (not found, compile and runtime errors) as content of there template you must set string B<template>.
+
+Set string B<comment> same above but include html comment tag
+
+  <!-- $error -->
 
 To show fatals as standard Mojolicious 'exception.<mode>.html.ep' page  - set hashref like {'handler'=>'ep', 'layout' => undef,}.
 
