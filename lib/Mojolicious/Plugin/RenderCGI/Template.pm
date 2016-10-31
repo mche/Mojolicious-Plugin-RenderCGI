@@ -2,8 +2,8 @@ package Mojolicious::Plugin::RenderCGI::Template;
 use Mojo::Base -base;
 use CGI;
 
-has [qw(import cgi content)];
-has cgi => sub { CGI->new };
+has [qw(_import _content)];
+has _cgi => sub { CGI->new };
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -18,7 +18,7 @@ sub new {
 }
 
 
-sub compile {
+sub _compile {
   my $self = shift;
   my ($code) = @_;
 
@@ -34,10 +34,10 @@ CODE
   return $self;
 }
 
-sub run {
+sub _run {
   my ($self, $c) = @_;
   
-  $self->content->($self, $c,$self->cgi);
+  $self->_content->($self, $c,$self->_cgi);
 }
 
 sub esc { escapeHTML(@_) }
@@ -46,19 +46,25 @@ sub esc { escapeHTML(@_) }
 sub  AUTOLOAD {
   #~ my ($func) = $AUTOLOAD =~ /([^:]+)$/;
   my ($package, $func) = our $AUTOLOAD =~ /^(.+)::(.+)$/;
+  my $tag = $func =~ s/_/-/gr;
+  my $package_arg = ref $_[0];
+  if ($package eq $package_arg) { # method
+    no strict 'refs';
+    no warnings 'redefine';
+    my $self = shift;
+    *{"${package}::$func"} = sub {
+      my $self = shift;
+      return &CGI::_tag_func($tag,@_);
+      
+    };
+    return $self->$func(@_);
+  }
+  # non method
+    
+  *$func = sub { return &CGI::_tag_func($tag,@_); };
   
-  my $self = shift;
-  *$func = sub { print "I see $name(@_)\n" };
-  
-  &$func()
+  return &$func(@_);
 }
 
-# Declared here to avoid circular require problems in Mojo::Util
-sub _monkey_patch {
-  my ($class, %patch) = @_;
-  no strict 'refs';
-  no warnings 'redefine';
-  *{"${class}::$_"} = $NAME->("${class}::$_", $patch{$_}) for keys %patch;
-}
 
 1;

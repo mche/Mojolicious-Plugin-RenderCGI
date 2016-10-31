@@ -84,21 +84,21 @@ sub handler {
       #~ or $$output = $plugin->error(sprintf(qq{Something's wrong for template "%s"}, $name), $c)
       #~ and return;
     
-    $template = Mojolicious::Plugin::RenderCGI::Template->new(import=>$plugin->import);
+    $template = Mojolicious::Plugin::RenderCGI::Template->new(_import=>$plugin->import);
 
-    my $err = $template->compile($content);
+    my $err = $template->_compile($content);
     
-    $$output = $plugin->error(sprintf(qq{Compile time error for template "%s": %s}, $name // $from, $err), $c)
+    $$output = $plugin->error(sprintf(qq{Compile time error for template "%s" from the %s: %s}, $name, $from, $err), $c)
       and return
-      unless ref $err;
+      unless ref $err; # ref success
     
   }
   
   $app->log->debug(sprintf(qq{Rendering template "%s" from the %s}, $name, $from,));
   $plugin->cache->{$name} ||= $template;
   
-  my @out = eval { $template->run($c)};
-  $$output = $plugin->error(sprintf(qq{Die on template "%s":\n%s}, $name // $from, $@), $c)
+  my @out = eval { $template->_run($c)};
+  $$output = $plugin->error(sprintf(qq{Runtime error for template "%s" from the %s:\n%s}, $name, $from, $@), $c)
     and return
     if $@;
   
