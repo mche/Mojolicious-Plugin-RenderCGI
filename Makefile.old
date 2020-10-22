@@ -1,7 +1,7 @@
 # This Makefile is for the Mojolicious::Plugin::RenderCGI extension to perl.
 #
 # It was generated automatically by MakeMaker version
-# 7.24 (Revision: 72400) from the contents of
+# 7.36 (Revision: 73600) from the contents of
 # Makefile.PL. Don't edit this file, edit Makefile.PL instead.
 #
 #       ANY CHANGES MADE HERE WILL BE LOST!
@@ -62,11 +62,11 @@ DIRFILESEP = /
 DFSEP = $(DIRFILESEP)
 NAME = Mojolicious::Plugin::RenderCGI
 NAME_SYM = Mojolicious_Plugin_RenderCGI
-VERSION = 0.101
+VERSION = 0.102
 VERSION_MACRO = VERSION
-VERSION_SYM = 0_101
+VERSION_SYM = 0_102
 DEFINE_VERSION = -D$(VERSION_MACRO)=\"$(VERSION)\"
-XS_VERSION = 0.101
+XS_VERSION = 0.102
 XS_VERSION_MACRO = XS_VERSION
 XS_DEFINE_VERSION = -D$(XS_VERSION_MACRO)=\"$(XS_VERSION)\"
 INST_ARCHLIB = blib/arch
@@ -143,9 +143,9 @@ PERM_DIR = 755
 PERM_RW = 644
 PERM_RWX = 755
 
-MAKEMAKER   = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/5.26.1/ExtUtils/MakeMaker.pm
-MM_VERSION  = 7.24
-MM_REVISION = 72400
+MAKEMAKER   = /home/guest/perl5/perlbrew/perls/perl-5.26.1/lib/site_perl/5.26.1/ExtUtils/MakeMaker.pm
+MM_VERSION  = 7.36
+MM_REVISION = 73600
 
 # FULLEXT = Pathname for extension directory (eg Foo/Bar/Oracle).
 # BASEEXT = Basename part of FULLEXT. May be just equal FULLEXT. (eg Oracle)
@@ -193,14 +193,13 @@ PERL_ARCHIVE_AFTER =
 
 
 TO_INST_PM = 000test.pl \
-	README.pod \
 	example.pl \
 	lib/Mojolicious/Plugin/RenderCGI.pm \
 	lib/Mojolicious/Plugin/RenderCGI/Template.pm
 
 
 # --- MakeMaker platform_constants section:
-MM_Unix_VERSION = 7.24
+MM_Unix_VERSION = 7.36
 PERL_MALLOC_DEF = -DPERL_EXTMALLOC_DEF -Dmalloc=Perl_malloc -Dfree=Perl_mfree -Drealloc=Perl_realloc -Dcalloc=Perl_calloc
 
 
@@ -266,7 +265,7 @@ RCS_LABEL = rcs -Nv$(VERSION_SYM): -q
 DIST_CP = best
 DIST_DEFAULT = tardist
 DISTNAME = Mojolicious-Plugin-RenderCGI
-DISTVNAME = Mojolicious-Plugin-RenderCGI-0.101
+DISTVNAME = Mojolicious-Plugin-RenderCGI-0.102
 
 
 # --- MakeMaker macro section:
@@ -494,7 +493,7 @@ realclean purge :: realclean_subdirs
 metafile : create_distdir
 	$(NOECHO) $(ECHO) Generating META.yml
 	$(NOECHO) $(ECHO) '---' > META_new.yml
-	$(NOECHO) $(ECHO) 'abstract: '\''Rendering template with Perl code and CGI.pm funcs/subs for tags emits.'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'abstract: '\''Rendering Mojoliciuos template by CGI.pm subs as tags.'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'author:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  - "Ð\x9CÐ¸Ñ\NÐ°Ð¸Ð» Ð§Ðµ <mche@cpan.org>"' >> META_new.yml
 	$(NOECHO) $(ECHO) 'build_requires:' >> META_new.yml
@@ -502,7 +501,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) 'configure_requires:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  ExtUtils::MakeMaker: '\''0'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'dynamic_config: 1' >> META_new.yml
-	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 7.24, CPAN::Meta::Converter version 2.150010'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'generated_by: '\''ExtUtils::MakeMaker version 7.36, CPAN::Meta::Converter version 2.150010'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'license: perl' >> META_new.yml
 	$(NOECHO) $(ECHO) 'meta-spec:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  url: http://module-build.sourceforge.net/META-spec-v1.4.html' >> META_new.yml
@@ -518,23 +517,23 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  perl: '\''5.006'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'resources:' >> META_new.yml
 	$(NOECHO) $(ECHO) '  repository: git://github.com/mche/Mojolicious-Plugin-RenderCGI.git' >> META_new.yml
-	$(NOECHO) $(ECHO) 'version: '\''0.101'\''' >> META_new.yml
+	$(NOECHO) $(ECHO) 'version: '\''0.102'\''' >> META_new.yml
 	$(NOECHO) $(ECHO) 'x_serialization_backend: '\''CPAN::Meta::YAML version 0.018'\''' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
 	$(NOECHO) $(ECHO) Generating META.json
 	$(NOECHO) $(ECHO) '{' > META_new.json
-	$(NOECHO) $(ECHO) '   "abstract" : "Rendering template with Perl code and CGI.pm funcs/subs for tags emits.",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "abstract" : "Rendering Mojoliciuos template by CGI.pm subs as tags.",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "author" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "ÐÐ¸ÑÐ°Ð¸Ð» Ð§Ðµ <mche@cpan.org>"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "dynamic_config" : 1,' >> META_new.json
-	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 7.24, CPAN::Meta::Converter version 2.150010",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "generated_by" : "ExtUtils::MakeMaker version 7.36, CPAN::Meta::Converter version 2.150010",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "license" : [' >> META_new.json
 	$(NOECHO) $(ECHO) '      "perl_5"' >> META_new.json
 	$(NOECHO) $(ECHO) '   ],' >> META_new.json
 	$(NOECHO) $(ECHO) '   "meta-spec" : {' >> META_new.json
 	$(NOECHO) $(ECHO) '      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",' >> META_new.json
-	$(NOECHO) $(ECHO) '      "version" : "2"' >> META_new.json
+	$(NOECHO) $(ECHO) '      "version" : 2' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
 	$(NOECHO) $(ECHO) '   "name" : "Mojolicious-Plugin-RenderCGI",' >> META_new.json
 	$(NOECHO) $(ECHO) '   "no_index" : {' >> META_new.json
@@ -570,8 +569,8 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '         "web" : "https://github.com/mche/Mojolicious-Plugin-RenderCGI"' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
 	$(NOECHO) $(ECHO) '   },' >> META_new.json
-	$(NOECHO) $(ECHO) '   "version" : "0.101",' >> META_new.json
-	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 2.27400_02"' >> META_new.json
+	$(NOECHO) $(ECHO) '   "version" : "0.102",' >> META_new.json
+	$(NOECHO) $(ECHO) '   "x_serialization_backend" : "JSON::PP version 4.04"' >> META_new.json
 	$(NOECHO) $(ECHO) '}' >> META_new.json
 	-$(NOECHO) $(MV) META_new.json $(DISTVNAME)/META.json
 
@@ -880,8 +879,8 @@ testdb_static :: static pure_all
 # --- MakeMaker ppd section:
 # Creates a PPD (Perl Package Description) for a binary distribution.
 ppd :
-	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RenderCGI" VERSION="0.101">' > Mojolicious-Plugin-RenderCGI.ppd
-	$(NOECHO) $(ECHO) '    <ABSTRACT>Rendering template with Perl code and CGI.pm funcs/subs for tags emits.</ABSTRACT>' >> Mojolicious-Plugin-RenderCGI.ppd
+	$(NOECHO) $(ECHO) '<SOFTPKG NAME="Mojolicious-Plugin-RenderCGI" VERSION="0.102">' > Mojolicious-Plugin-RenderCGI.ppd
+	$(NOECHO) $(ECHO) '    <ABSTRACT>Rendering Mojoliciuos template by CGI.pm subs as tags.</ABSTRACT>' >> Mojolicious-Plugin-RenderCGI.ppd
 	$(NOECHO) $(ECHO) '    <AUTHOR>ÐÐ¸ÑÐ°Ð¸Ð» Ð§Ðµ &lt;mche@cpan.org&gt;</AUTHOR>' >> Mojolicious-Plugin-RenderCGI.ppd
 	$(NOECHO) $(ECHO) '    <IMPLEMENTATION>' >> Mojolicious-Plugin-RenderCGI.ppd
 	$(NOECHO) $(ECHO) '        <PERLCORE VERSION="5,006,0,0" />' >> Mojolicious-Plugin-RenderCGI.ppd
@@ -898,7 +897,6 @@ ppd :
 pm_to_blib : $(FIRST_MAKEFILE) $(TO_INST_PM)
 	$(NOECHO) $(ABSPERLRUN) -MExtUtils::Install -e 'pm_to_blib({@ARGV}, '\''$(INST_LIB)/auto'\'', q[$(PM_FILTER)], '\''$(PERM_DIR)'\'')' -- \
 	  '000test.pl' '$(INST_LIB)/Mojolicious/Plugin/000test.pl' \
-	  'README.pod' '$(INST_LIB)/Mojolicious/Plugin/README.pod' \
 	  'example.pl' '$(INST_LIB)/Mojolicious/Plugin/example.pl' \
 	  'lib/Mojolicious/Plugin/RenderCGI.pm' 'blib/lib/Mojolicious/Plugin/RenderCGI.pm' \
 	  'lib/Mojolicious/Plugin/RenderCGI/Template.pm' 'blib/lib/Mojolicious/Plugin/RenderCGI/Template.pm' 
