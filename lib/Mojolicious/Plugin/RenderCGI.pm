@@ -91,7 +91,7 @@ sub handler {
     
     $$output = $plugin->error(sprintf(qq{Compile time error for template "%s" from the %s: %s}, $name, $from, $err), $c)
       and return
-      unless ref $err; # ref success
+      unless ref $err and $err == $template; # ref success
     
   }
   
